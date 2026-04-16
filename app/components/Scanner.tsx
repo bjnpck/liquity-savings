@@ -150,7 +150,7 @@ export function Scanner({ address }: ScannerProps) {
                 <div className="flex flex-col gap-3 flex-shrink-0 w-full md:w-48">
                   {(() => {
                     const slugMap: Record<string, string> = { WETH: "eth", wstETH: "wsteth", rETH: "reth" };
-                    const cols = [...new Set(result.enrichedPositions.map((p) => p.liquityV2Collateral).filter(Boolean))];
+                    const cols = Array.from(new Set(result.enrichedPositions.map((p) => p.liquityV2Collateral).filter(Boolean)));
                     const href = cols.length === 1
                       ? `https://liquity.app/borrow/${slugMap[cols[0]!] ?? cols[0]!.toLowerCase()}`
                       : "https://liquity.app/borrow";
