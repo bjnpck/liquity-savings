@@ -101,7 +101,7 @@ export async function fetchMakerPositions(address: string): Promise<BorrowPositi
   if (ids.length === 0) return [];
 
   // 2. Batch: read urn balances (ink, art) and ilk rates from Vat
-  const uniqueIlks = [...new Set(ilkBytes.map((b) => b as `0x${string}`))];
+  const uniqueIlks = Array.from(new Set(ilkBytes.map((b) => b as `0x${string}`)));
 
   const [vatIlkResults, jugResults, vatUrnResults] = await Promise.all([
     // ilk data: Art, rate, spot, line, dust
@@ -149,7 +149,7 @@ export async function fetchMakerPositions(address: string): Promise<BorrowPositi
 
   if (activePositions.length === 0) return [];
 
-  const collaterals = [...new Set(activePositions.map((p) => ilkToCollateral(p.ilkName)))];
+  const collaterals = Array.from(new Set(activePositions.map((p) => ilkToCollateral(p.ilkName))));
   const prices = await getTokenPrices([...collaterals, "DAI"]);
 
   return activePositions.map((p): BorrowPosition => {

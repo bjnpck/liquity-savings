@@ -28,7 +28,7 @@ export async function getTokenPrices(symbols: string[]): Promise<Record<string, 
     return priceCache;
   }
 
-  const ids = [...new Set(symbols.map((s) => TOKEN_IDS[s]).filter(Boolean))];
+  const ids = Array.from(new Set(symbols.map((s) => TOKEN_IDS[s]).filter(Boolean)));
   if (ids.length === 0) return {};
 
   try {
