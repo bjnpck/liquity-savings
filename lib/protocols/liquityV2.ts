@@ -66,8 +66,8 @@ function wadToRate(w: bigint): number {
   return Number(w / 1_000n) / 1e15;
 }
 
-const branchListCache: { data: LiquityV2Branch[]; ts: number } | null = null;
-let _branchListCache: typeof branchListCache = null;
+type BranchListCache = { data: LiquityV2Branch[]; ts: number };
+let _branchListCache: BranchListCache | null = null;
 
 async function getClient() {
   return createPublicClient({
