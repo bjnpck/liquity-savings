@@ -108,17 +108,6 @@ export default function Home() {
         </div>
       )}
 
-      <footer className="mt-16 py-5 text-center text-xs" style={{ borderTop: "1px solid rgba(255,255,255,0.05)", color: "#777773" }}>
-        <a href="https://liquity.org" target="_blank" rel="noopener noreferrer"
-          className="transition-colors"
-          style={{ color: "#777773" }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "#aaa9a4")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "#777773")}
-        >
-          Liquity v2
-        </a>{" "}
-        · Read-only · No wallet connection required
-      </footer>
     </main>
   );
 }
