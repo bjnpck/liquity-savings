@@ -77,7 +77,7 @@ export async function fetchSparkPositions(address: string): Promise<BorrowPositi
     .map((r, i) => ({ reserve: r, ud: userDataResults[i] }))
     .filter(({ ud }) => {
       if (!ud) return false;
-      const [, stableDebt, variableDebt] = ud as bigint[];
+      const [, stableDebt, variableDebt] = ud as unknown as bigint[];
       return stableDebt > 0n || variableDebt > 0n;
     });
 
@@ -96,7 +96,7 @@ export async function fetchSparkPositions(address: string): Promise<BorrowPositi
   for (let i = 0; i < allReserves.length; i++) {
     const ud = userDataResults[i];
     if (!ud) continue;
-    const [aTokenBalance, , , , , , , , usageAsCollateral] = ud as [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, boolean];
+    const [aTokenBalance, , , , , , , , usageAsCollateral] = ud as unknown as [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, boolean];
     if (!usageAsCollateral || aTokenBalance === 0n) continue;
     const sym = allReserves[i].symbol;
     const mapped = COLLATERAL_MAP[sym] ?? COLLATERAL_MAP[sym.toUpperCase()];
@@ -146,8 +146,8 @@ export async function fetchSparkPositions(address: string): Promise<BorrowPositi
   const positions: BorrowPosition[] = [];
 
   active.forEach(({ reserve, ud }, i) => {
-    const [, currentStableDebt, currentVariableDebt, , , stableBorrowRate] = ud as bigint[];
-    const reserveData = reserveDataArr[i] as bigint[] | null;
+    const [, currentStableDebt, currentVariableDebt, , , stableBorrowRate] = ud as unknown as bigint[];
+    const reserveData = reserveDataArr[i] as unknown as unknown as bigint[] | null;
     const variableBorrowRate = reserveData ? reserveData[6] : 0n;
     const decimals = Number((decimalsArr as (number | bigint)[])[i]);
 

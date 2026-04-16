@@ -90,7 +90,7 @@ async function fetch90dAvgRate(
     const [aggWeighted, aggDebt] = await Promise.all([
       client.readContract({ address: activePool, abi: ACTIVE_POOL_ABI, functionName: "aggWeightedDebtSum", blockNumber: historicalBlock }),
       client.readContract({ address: activePool, abi: ACTIVE_POOL_ABI, functionName: "aggRecordedDebt", blockNumber: historicalBlock }),
-    ]) as [bigint, bigint];
+    ]) as unknown as [bigint, bigint];
 
     if (aggDebt === 0n) return undefined;
     return Number(aggWeighted / aggDebt) / 1e15 / 1000;
@@ -114,7 +114,7 @@ async function fetchBranchRates(
     const [aggWeightedDebtSum, aggRecordedDebt] = await Promise.all([
       client.readContract({ address: activePool, abi: ACTIVE_POOL_ABI, functionName: "aggWeightedDebtSum" }),
       client.readContract({ address: activePool, abi: ACTIVE_POOL_ABI, functionName: "aggRecordedDebt" }),
-    ]) as [bigint, bigint];
+    ]) as unknown as [bigint, bigint];
 
     // aggWeightedDebtSum = Σ(debt × rate), both in WAD → ratio is rate in WAD
     // Divide by 1000 before Number() to stay within safe integer range

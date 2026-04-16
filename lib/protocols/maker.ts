@@ -90,7 +90,7 @@ export async function fetchMakerPositions(address: string): Promise<BorrowPositi
       abi: GET_CDPS_ABI,
       functionName: "getCdpsAsc",
       args: [CDP_MANAGER_ADDRESS, lookupAddr],
-    })) as [bigint[], `0x${string}`[], `0x${string}`[]];
+    })) as unknown as [bigint[], `0x${string}`[], `0x${string}`[]];
 
     if (result[0].length > 0) {
       [ids, urns, ilkBytes] = result;
@@ -128,8 +128,8 @@ export async function fetchMakerPositions(address: string): Promise<BorrowPositi
   const ilkRateMap = new Map<string, bigint>();
   const ilkDutyMap = new Map<string, number>();
   uniqueIlks.forEach((ilk, i) => {
-    const [, rate] = vatIlkResults[i] as [bigint, bigint, bigint, bigint, bigint];
-    const [duty] = jugResults[i] as [bigint, bigint];
+    const [, rate] = vatIlkResults[i] as unknown as [bigint, bigint, bigint, bigint, bigint];
+    const [duty] = jugResults[i] as unknown as [bigint, bigint];
     ilkRateMap.set(ilk, rate);
     ilkDutyMap.set(ilk, dutyToApr(duty));
   });
@@ -137,7 +137,7 @@ export async function fetchMakerPositions(address: string): Promise<BorrowPositi
   // 3. Filter active CDPs (art > 0) and build positions
   const activePositions = ids
     .map((id, i) => {
-      const [ink, art] = vatUrnResults[i] as [bigint, bigint];
+      const [ink, art] = vatUrnResults[i] as unknown as [bigint, bigint];
       if (art === 0n) return null;
       const ilkKey = ilkBytes[i];
       const ilkName = bytes32ToIlkName(ilkKey);
