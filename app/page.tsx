@@ -27,14 +27,8 @@ export default function Home() {
         <div className="max-w-6xl mx-auto flex items-center justify-between">
           <button
             onClick={() => setAddress(null)}
-            className="flex items-center gap-2 transition-opacity hover:opacity-70"
+            className="flex items-center transition-opacity hover:opacity-70"
           >
-            <div
-              className="w-6 h-6 rounded-md flex items-center justify-center text-xs"
-              style={{ background: "rgba(201,144,30,0.15)", border: "1px solid rgba(201,144,30,0.3)", color: "#c9901e" }}
-            >
-              L
-            </div>
             <span className="text-sm font-medium" style={{ color: "#f0f0ee" }}>Liquity Savings</span>
           </button>
 
@@ -56,14 +50,6 @@ export default function Home() {
         <Scanner address={address} />
       ) : (
         <div className="flex flex-col items-center justify-center min-h-[75vh] text-center px-4">
-          <div className="mb-8">
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 text-lg font-bold"
-              style={{ background: "rgba(201,144,30,0.12)", border: "1px solid rgba(201,144,30,0.25)", color: "#c9901e" }}
-            >
-              L
-            </div>
-          </div>
 
           <h1 className="text-3xl sm:text-4xl font-semibold mb-3 leading-tight" style={{ color: "#f0f0ee" }}>
             Stop overpaying for your loan
