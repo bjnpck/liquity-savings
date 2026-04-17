@@ -5,7 +5,7 @@ import type { BorrowPosition } from "../types";
 const COMPOUND_API = "https://api.compound.finance/api/v2/account";
 
 // Known Compound v3 comet addresses and their base assets
-const COMETS: { address: string; baseAsset: string }[] = [
+const COMETS: { address: string; baseAsset: string; baseAddress: string }[] = [
   { address: "0xc3d688B66703497DAA19211EEdff47f25384cdc3", baseAsset: "USDC", baseAddress: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48" },
   { address: "0xA17581A9E3356d9A858b789D68B4d866e593aE94", baseAsset: "WETH", baseAddress: "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2" },
   { address: "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840", baseAsset: "USDT", baseAddress: "0xdac17f958d2ee523a2206206994597c13d831ec7" },
