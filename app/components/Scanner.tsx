@@ -14,6 +14,7 @@ type ScanResult = {
   statuses: TProtocolStatus[];
   enrichedPositions: BorrowPosition[];
   totalAnnualCostNow: number;
+  totalAnnualCostSpot: number;
   totalAnnualCostLiquity: number;
   totalAnnualSavingsAvg: number;
   totalAnnualSavingsCheap: number;
@@ -104,6 +105,7 @@ export function Scanner({ address }: ScannerProps) {
               <SavingsSummary
                 totalDebtUsd={result.enrichedPositions.filter((p) => !p.isAlternativeCollateral).reduce((sum, p) => sum + p.debtUsd, 0)}
                 totalAnnualCostNow={result.totalAnnualCostNow}
+                totalAnnualCostSpot={result.totalAnnualCostSpot}
                 totalAnnualSavingsAvg={result.totalAnnualSavingsAvg}
                 totalAnnualSavingsCheap={result.totalAnnualSavingsCheap}
                 positionCount={result.enrichedPositions.length}

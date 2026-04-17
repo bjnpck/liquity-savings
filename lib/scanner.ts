@@ -18,6 +18,7 @@ export type ScanResult = {
   statuses: ProtocolStatus[];
   enrichedPositions: BorrowPosition[];
   totalAnnualCostNow: number;
+  totalAnnualCostSpot: number;
   totalAnnualCostLiquity: number;
   totalAnnualSavingsAvg: number;
   totalAnnualSavingsCheap: number;
@@ -122,11 +123,28 @@ export async function scanAllProtocols(
     }
   }
 
+  // Recalculate cost and savings using 90d avg rate as basis (falls back to spot if unavailable)
+  for (const p of enrichedPositions) {
+    const basisRate = p.currentRate90dAvg ?? p.currentRateApr;
+    p.annualCostNow = p.debtUsd * basisRate;
+    if (p.liquityV2RateAvg !== undefined) {
+      p.annualSavingsAvg = p.debtUsd * (basisRate - p.liquityV2RateAvg);
+    }
+    if (p.liquityV2RateP10 !== undefined) {
+      p.annualSavingsCheap = p.debtUsd * (basisRate - p.liquityV2RateP10);
+    }
+  }
+
   // Exclude alternative-collateral rows from totals (same debt, different branch option)
   const primaryPositions = enrichedPositions.filter((p) => !p.isAlternativeCollateral);
 
   const totalAnnualCostNow = primaryPositions.reduce(
     (sum, p) => sum + (p.annualCostNow ?? 0),
+    0
+  );
+
+  const totalAnnualCostSpot = primaryPositions.reduce(
+    (sum, p) => sum + p.debtUsd * p.currentRateApr,
     0
   );
 
@@ -153,6 +171,7 @@ export async function scanAllProtocols(
     statuses: protocolResults as ProtocolStatus[],
     enrichedPositions,
     totalAnnualCostNow,
+    totalAnnualCostSpot,
     totalAnnualCostLiquity,
     totalAnnualSavingsAvg,
     totalAnnualSavingsCheap,

@@ -69,7 +69,7 @@ export function PositionsTable({ positions }: { positions: BorrowPosition[] }) {
         <thead>
           {/* Group row */}
           <tr style={{ background: "#2a2a2a", borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-            <th colSpan={5} style={{ ...borderCol }} />
+            <th colSpan={6} style={{ ...borderCol }} />
             <th
               colSpan={2}
               className="text-center px-3 py-2 text-[11px] uppercase tracking-widest font-medium"
@@ -95,6 +95,7 @@ export function PositionsTable({ positions }: { positions: BorrowPosition[] }) {
               { label: "Debt Token", align: "left" },
               { label: "Debt (USD)", align: "right" },
               { label: "Current Rate", align: "right" },
+              { label: "90d Avg Rate", align: "right" },
               { label: "Rate", align: "right" },
               { label: "Savings", align: "right" },
               { label: "Rate", align: "right" },
@@ -111,85 +112,85 @@ export function PositionsTable({ positions }: { positions: BorrowPosition[] }) {
           </tr>
         </thead>
         <tbody>
-          {positions.map((pos, i) => {
-            const savingsVsLowest = pos.liquityV2RateP10 !== undefined
-              ? pos.debtUsd * (pos.currentRateApr - pos.liquityV2RateP10)
-              : undefined;
-            return (
-              <tr
-                key={i}
-                className="transition-colors"
-                style={borderRow}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#252525")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
-              >
-                <td className="px-3 py-2.5"><ProtocolBadge protocol={pos.protocol} /></td>
-                <td className="px-3 py-2.5 font-mono text-xs" style={{ color: "#aaa9a4" }}>
-                  {pos.collateral}
-                  {pos.protocol === "Aave v3" && (
-                    <span className="ml-1 text-[10px] cursor-help" style={{ color: "#444" }} title="Aave cross-collateral — ETH branch shown">*</span>
-                  )}
-                </td>
-                <td className="px-3 py-2.5 font-mono text-xs" style={{ color: "#aaa9a4" }}>{pos.debtToken}</td>
-                <td className="px-3 py-2.5 text-right font-mono font-medium" style={{ color: "#f0f0ee" }}>
-                  {pos.isAlternativeCollateral
-                    ? <span className="text-xs" style={{ color: "#333" }}>↑ same</span>
-                    : fmt(pos.debtUsd)
-                  }
-                </td>
-                <td className="px-3 py-2.5 text-right">
-                  <span className="font-mono font-semibold" style={{ color: "#e05c4a" }}>{fmtPct(pos.currentRateApr)}</span>
-                  {pos.currentRate90dAvg !== undefined && (
-                    <div className="text-[10px] font-mono mt-0.5" style={{ color: "#555552" }}>
-                      90d {fmtPct(pos.currentRate90dAvg)}
-                    </div>
-                  )}
-                </td>
-                <td className="px-3 py-2.5 text-right"><RateCell rate={pos.liquityV2RateAvg} /></td>
-                <td className="px-3 py-2.5 text-right"><SavingsCell savings={pos.annualSavingsAvg} /></td>
-                <td className="px-3 py-2.5 text-right"><RateCell rate={pos.liquityV2RateP10} /></td>
-                <td className="px-3 py-2.5 text-right"><SavingsCell savings={savingsVsLowest} /></td>
-              </tr>
-            );
-          })}
+          {positions.map((pos, i) => (
+            <tr
+              key={i}
+              className="transition-colors"
+              style={borderRow}
+              onMouseEnter={(e) => (e.currentTarget.style.background = "#252525")}
+              onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+            >
+              <td className="px-3 py-2.5"><ProtocolBadge protocol={pos.protocol} /></td>
+              <td className="px-3 py-2.5 font-mono text-xs" style={{ color: "#aaa9a4" }}>
+                {pos.collateral}
+                {pos.protocol === "Aave v3" && (
+                  <span className="ml-1 text-[10px] cursor-help" style={{ color: "#444" }} title="Aave cross-collateral — ETH branch shown">*</span>
+                )}
+              </td>
+              <td className="px-3 py-2.5 font-mono text-xs" style={{ color: "#aaa9a4" }}>{pos.debtToken}</td>
+              <td className="px-3 py-2.5 text-right font-mono font-medium" style={{ color: "#f0f0ee" }}>
+                {pos.isAlternativeCollateral
+                  ? <span className="text-xs" style={{ color: "#333" }}>↑ same</span>
+                  : fmt(pos.debtUsd)
+                }
+              </td>
+              {/* Spot rate */}
+              <td className="px-3 py-2.5 text-right">
+                <span className="font-mono font-semibold" style={{ color: "#e05c4a" }}>{fmtPct(pos.currentRateApr)}</span>
+              </td>
+              {/* 90d avg rate */}
+              <td className="px-3 py-2.5 text-right">
+                {pos.currentRate90dAvg !== undefined
+                  ? <span className="font-mono font-medium" style={{ color: "#aaa9a4" }}>{fmtPct(pos.currentRate90dAvg)}</span>
+                  : <span style={{ color: "#333" }}>—</span>
+                }
+              </td>
+              <td className="px-3 py-2.5 text-right"><RateCell rate={pos.liquityV2RateAvg} /></td>
+              <td className="px-3 py-2.5 text-right"><SavingsCell savings={pos.annualSavingsAvg} /></td>
+              <td className="px-3 py-2.5 text-right"><RateCell rate={pos.liquityV2RateP10} /></td>
+              <td className="px-3 py-2.5 text-right"><SavingsCell savings={pos.annualSavingsCheap} /></td>
+            </tr>
+          ))}
         </tbody>
       </table>
 
       {/* Mobile */}
       <div className="md:hidden divide-y" style={{ borderColor: "rgba(255,255,255,0.05)" }}>
-        {positions.map((pos, i) => {
-          const savingsVsLowest = pos.liquityV2RateP10 !== undefined
-            ? pos.debtUsd * (pos.currentRateApr - pos.liquityV2RateP10)
-            : undefined;
-          return (
-            <div key={i} className="p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <ProtocolBadge protocol={pos.protocol} />
-                <span className="font-mono text-xs" style={{ color: "#aaa9a4" }}>
-                  {pos.collateral} · {pos.debtToken}
-                </span>
+        {positions.map((pos, i) => (
+          <div key={i} className="p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <ProtocolBadge protocol={pos.protocol} />
+              <span className="font-mono text-xs" style={{ color: "#aaa9a4" }}>
+                {pos.collateral} · {pos.debtToken}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              <div>
+                <p className="text-[11px] uppercase tracking-widest mb-0.5" style={{ color: "#777773" }}>Debt</p>
+                <p className="font-mono font-medium" style={{ color: "#f0f0ee" }}>{fmt(pos.debtUsd)}</p>
               </div>
-              <div className="grid grid-cols-2 gap-3 text-sm">
-                <div>
-                  <p className="text-[11px] uppercase tracking-widest mb-0.5" style={{ color: "#777773" }}>Debt</p>
-                  <p className="font-mono font-medium" style={{ color: "#f0f0ee" }}>{fmt(pos.debtUsd)}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] uppercase tracking-widest mb-0.5" style={{ color: "#777773" }}>Current Rate</p>
-                  <p className="font-mono font-semibold" style={{ color: "#e05c4a" }}>{fmtPct(pos.currentRateApr)}</p>
-                </div>
-                <div>
-                  <p className="text-[11px] uppercase tracking-widest mb-0.5" style={{ color: "#777773" }}>v2 Avg rate</p>
-                  <RateCell rate={pos.liquityV2RateAvg} />
-                </div>
-                <div>
-                  <p className="text-[11px] uppercase tracking-widest mb-0.5" style={{ color: "#777773" }}>Save vs avg</p>
-                  <SavingsCell savings={pos.annualSavingsAvg} />
-                </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-widest mb-0.5" style={{ color: "#777773" }}>Current Rate</p>
+                <p className="font-mono font-semibold" style={{ color: "#e05c4a" }}>{fmtPct(pos.currentRateApr)}</p>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-widest mb-0.5" style={{ color: "#777773" }}>90d Avg Rate</p>
+                {pos.currentRate90dAvg !== undefined
+                  ? <p className="font-mono font-medium" style={{ color: "#aaa9a4" }}>{fmtPct(pos.currentRate90dAvg)}</p>
+                  : <span style={{ color: "#333" }}>—</span>
+                }
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-widest mb-0.5" style={{ color: "#777773" }}>v2 Avg rate</p>
+                <RateCell rate={pos.liquityV2RateAvg} />
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-widest mb-0.5" style={{ color: "#777773" }}>Save vs avg</p>
+                <SavingsCell savings={pos.annualSavingsAvg} />
               </div>
             </div>
-          );
-        })}
+          </div>
+        ))}
       </div>
     </div>
   );

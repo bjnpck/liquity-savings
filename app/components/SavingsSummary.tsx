@@ -3,6 +3,7 @@
 interface SavingsSummaryProps {
   totalDebtUsd: number;
   totalAnnualCostNow: number;
+  totalAnnualCostSpot: number;
   totalAnnualSavingsAvg: number;
   totalAnnualSavingsCheap: number;
   positionCount: number;
@@ -17,6 +18,7 @@ function fmt(n: number): string {
 export function SavingsSummary({
   totalDebtUsd,
   totalAnnualCostNow,
+  totalAnnualCostSpot,
   totalAnnualSavingsAvg,
   totalAnnualSavingsCheap,
   positionCount,
@@ -38,17 +40,22 @@ export function SavingsSummary({
 
       {/* 3-col grid */}
       <div className="grid grid-cols-3" style={{ borderBottom: "none" }}>
-        {/* Current cost */}
+        {/* Current cost (90d avg basis) */}
         <div className="px-4 py-3" style={{ borderRight: "1px solid rgba(255,255,255,0.06)" }}>
           <p className="text-[11px] uppercase tracking-widest font-medium mb-1" style={{ color: "#777773" }}>Current cost</p>
           <p className="font-mono text-lg font-semibold" style={{ color: "#e05c4a" }}>
             {fmt(totalAnnualCostNow)}<span className="text-xs font-normal ml-1" style={{ color: "#777773" }}>/yr</span>
           </p>
+          {totalAnnualCostSpot !== totalAnnualCostNow && (
+            <p className="text-[11px] font-mono mt-0.5" style={{ color: "#555552" }}>
+              now: {fmt(totalAnnualCostSpot)}/yr
+            </p>
+          )}
         </div>
 
         {/* At avg rate */}
         <div className="px-4 py-3" style={{ borderRight: "1px solid rgba(255,255,255,0.06)" }}>
-          <p className="text-[11px] uppercase tracking-widest font-medium mb-1" style={{ color: "#777773" }}>Liquity avg rate</p>
+          <p className="text-[11px] uppercase tracking-widest font-medium mb-1" style={{ color: "#777773" }}>Liquity Avg (90d)</p>
           {hasSavings && totalAnnualSavingsAvg > 0 ? (
             <>
               <p className="font-mono text-lg font-semibold" style={{ color: "#5a9e62" }}>
@@ -63,7 +70,7 @@ export function SavingsSummary({
 
         {/* At lowest rate */}
         <div className="px-4 py-3">
-          <p className="text-[11px] uppercase tracking-widest font-medium mb-1" style={{ color: "#777773" }}>Liquity low rate</p>
+          <p className="text-[11px] uppercase tracking-widest font-medium mb-1" style={{ color: "#777773" }}>Liquity Low (90d)</p>
           {hasSavings && totalAnnualSavingsCheap > 0 ? (
             <>
               <p className="font-mono text-lg font-semibold" style={{ color: "#5a9e62" }}>
