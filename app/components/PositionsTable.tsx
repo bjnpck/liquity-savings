@@ -137,7 +137,14 @@ export function PositionsTable({ positions }: { positions: BorrowPosition[] }) {
                     : fmt(pos.debtUsd)
                   }
                 </td>
-                <td className="px-3 py-2.5 text-right font-mono font-semibold" style={{ color: "#e05c4a" }}>{fmtPct(pos.currentRateApr)}</td>
+                <td className="px-3 py-2.5 text-right">
+                  <span className="font-mono font-semibold" style={{ color: "#e05c4a" }}>{fmtPct(pos.currentRateApr)}</span>
+                  {pos.currentRate90dAvg !== undefined && (
+                    <div className="text-[10px] font-mono mt-0.5" style={{ color: "#555552" }}>
+                      90d {fmtPct(pos.currentRate90dAvg)}
+                    </div>
+                  )}
+                </td>
                 <td className="px-3 py-2.5 text-right"><RateCell rate={pos.liquityV2RateAvg} /></td>
                 <td className="px-3 py-2.5 text-right"><SavingsCell savings={pos.annualSavingsAvg} /></td>
                 <td className="px-3 py-2.5 text-right"><RateCell rate={pos.liquityV2RateP10} /></td>

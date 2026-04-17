@@ -1,4 +1,5 @@
 import type { BorrowPosition, ProtocolStatus, Protocol } from "./types";
+import { get90dBorrowRates } from "./sphere";
 
 const STABLECOINS = new Set([
   "USDC", "USDT", "DAI", "GHO", "USDS", "LUSD", "BOLD", "FRAX", "PYUSD", "CRVUSD",
@@ -100,6 +101,24 @@ export async function scanAllProtocols(
       }
 
       enrichedPositions.push(enriched);
+    }
+  }
+
+  // Fetch 90d borrow rates from Sphere for all unique (protocol, debtTokenAddress) pairs
+  const sphereQueries = enrichedPositions
+    .filter((p) => p.debtTokenAddress && !p.isAlternativeCollateral)
+    .map((p) => ({
+      protocol: p.protocol,
+      underlyingAddress: p.debtTokenAddress!,
+      key: `${p.protocol}:${p.debtTokenAddress}`,
+    }));
+
+  const rates90d = await get90dBorrowRates(sphereQueries).catch(() => ({} as Record<string, number>));
+
+  for (const p of enrichedPositions) {
+    if (p.debtTokenAddress) {
+      const key = `${p.protocol}:${p.debtTokenAddress}`;
+      if (rates90d[key] !== undefined) p.currentRate90dAvg = rates90d[key];
     }
   }
 

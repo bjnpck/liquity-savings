@@ -182,6 +182,7 @@ export async function fetchSparkPositions(address: string): Promise<BorrowPositi
         collateral: liquityCollaterals[ci],
         collateralUsd: 0,
         debtToken: reserve.symbol,
+        debtTokenAddress: reserve.tokenAddress,
         debtAmount,
         debtUsd,
         currentRateApr: rayToApr(rateRay),

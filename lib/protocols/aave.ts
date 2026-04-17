@@ -180,6 +180,7 @@ export async function fetchAavePositions(address: string): Promise<BorrowPositio
         collateral: liquityCollaterals[ci],
         collateralUsd: 0,
         debtToken: reserve.symbol,
+        debtTokenAddress: reserve.tokenAddress,
         debtAmount,
         debtUsd,
         currentRateApr: rayToApr(rateRay),

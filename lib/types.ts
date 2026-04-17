@@ -11,9 +11,11 @@ export interface BorrowPosition {
   collateral: string;          // symbol, e.g. "wstETH"
   collateralUsd: number;
   debtToken: string;           // symbol, e.g. "USDC"
+  debtTokenAddress?: string;   // underlying token address for Sphere API lookup
   debtAmount: number;          // raw units
   debtUsd: number;
   currentRateApr: number;      // e.g. 0.055 = 5.5%
+  currentRate90dAvg?: number;  // 90-day average borrow rate from Sphere API
   // Populated after Liquity v2 rate fetch
   liquityV2Collateral?: string; // mapped Liquity v2 branch
   liquityV2RateAvg?: number;
