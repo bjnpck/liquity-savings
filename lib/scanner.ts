@@ -21,7 +21,6 @@ export type ScanResult = {
   totalAnnualCostSpot: number;
   totalAnnualCostLiquity: number;
   totalAnnualSavingsAvg: number;
-  totalAnnualSavingsCheap: number;
 };
 
 const PROTOCOLS: {
@@ -91,14 +90,13 @@ export async function scanAllProtocols(
         enriched.liquityV2RateAvg = branch.avgRate;
         enriched.liquityV2RateP25 = branch.p25Rate;
         enriched.liquityV2RateP10 = branch.p10Rate;
+        enriched.liquityV2Rate90dAvg = branch.avg90dRate;
         enriched.annualCostNow = pos.debtUsd * pos.currentRateApr;
         enriched.annualSavingsAvg = pos.debtUsd * (pos.currentRateApr - branch.avgRate);
-        enriched.annualSavingsCheap = pos.debtUsd * (pos.currentRateApr - branch.p10Rate);
       } else {
         // No equivalent Liquity v2 branch — only show current cost
         enriched.annualCostNow = pos.debtUsd * pos.currentRateApr;
         enriched.annualSavingsAvg = 0;
-        enriched.annualSavingsCheap = 0;
       }
 
       enrichedPositions.push(enriched);
@@ -123,15 +121,13 @@ export async function scanAllProtocols(
     }
   }
 
-  // Recalculate cost and savings using 90d avg rate as basis (falls back to spot if unavailable)
+  // Recalculate cost and savings using 90d avg rates on both sides (falls back to spot/live if unavailable)
   for (const p of enrichedPositions) {
     const basisRate = p.currentRate90dAvg ?? p.currentRateApr;
+    const liquityBasis = p.liquityV2Rate90dAvg ?? p.liquityV2RateAvg;
     p.annualCostNow = p.debtUsd * basisRate;
-    if (p.liquityV2RateAvg !== undefined) {
-      p.annualSavingsAvg = p.debtUsd * (basisRate - p.liquityV2RateAvg);
-    }
-    if (p.liquityV2RateP10 !== undefined) {
-      p.annualSavingsCheap = p.debtUsd * (basisRate - p.liquityV2RateP10);
+    if (liquityBasis !== undefined) {
+      p.annualSavingsAvg = p.debtUsd * (basisRate - liquityBasis);
     }
   }
 
@@ -153,17 +149,13 @@ export async function scanAllProtocols(
   const groupKey = (p: BorrowPosition) => `${p.protocol}:${p.debtToken}`;
 
   const bestSavingsAvgByGroup = new Map<string, number>();
-  const bestSavingsCheapByGroup = new Map<string, number>();
   for (const p of enrichedPositions) {
     const key = groupKey(p);
     const avg = Math.max(0, p.annualSavingsAvg ?? 0);
-    const cheap = Math.max(0, p.annualSavingsCheap ?? 0);
     bestSavingsAvgByGroup.set(key, Math.max(bestSavingsAvgByGroup.get(key) ?? 0, avg));
-    bestSavingsCheapByGroup.set(key, Math.max(bestSavingsCheapByGroup.get(key) ?? 0, cheap));
   }
 
   const totalAnnualSavingsAvg = [...bestSavingsAvgByGroup.values()].reduce((a, b) => a + b, 0);
-  const totalAnnualSavingsCheap = [...bestSavingsCheapByGroup.values()].reduce((a, b) => a + b, 0);
 
   const totalAnnualCostLiquity = totalAnnualCostNow - totalAnnualSavingsAvg;
 
@@ -174,6 +166,5 @@ export async function scanAllProtocols(
     totalAnnualCostSpot,
     totalAnnualCostLiquity,
     totalAnnualSavingsAvg,
-    totalAnnualSavingsCheap,
   };
 }

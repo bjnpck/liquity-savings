@@ -200,13 +200,17 @@ export async function getLiquityV2Branches(): Promise<LiquityV2Branch[]> {
     const branches = await Promise.all(
       indices.map(async (i): Promise<LiquityV2Branch> => {
         const collateral = symbols[i];
-        const rates = await fetchBranchRates(collateral, i);
+        const [rates, avg90d] = await Promise.all([
+          fetchBranchRates(collateral, i),
+          fetch90dAvgRate(collateral),
+        ]);
         return {
           collateral,
           troveManagerAddress: (troveManagerAddresses[i] as string).toLowerCase(),
           avgRate: rates.avg,
           p25Rate: rates.p10,
           p10Rate: rates.p10,
+          avg90dRate: avg90d,
         };
       })
     );

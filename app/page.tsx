@@ -33,15 +33,38 @@ export default function Home() {
           </button>
 
           {address && (
-            <button
-              onClick={() => setAddress(null)}
-              className="text-xs px-3 py-1.5 rounded-full transition-colors"
-              style={{ color: "#aaa9a4", border: "1px solid rgba(255,255,255,0.08)" }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = "#f0f0ee")}
-              onMouseLeave={(e) => (e.currentTarget.style.color = "#aaa9a4")}
-            >
-              ← New address
-            </button>
+            <div className="flex items-end" style={{ gap: "12px" }}>
+              {/* DeFi Saver — label above button */}
+              <div className="flex flex-col items-end gap-1.5">
+                <p className="text-[11px] leading-none whitespace-nowrap" style={{ color: "#aaa9a4" }}>
+                  DeFi Saver user? Migrate with 1 click
+                </p>
+                <a
+                  href="https://app.defisaver.com/shifter"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs px-3 py-1.5 rounded-lg transition-all whitespace-nowrap font-medium active:scale-95"
+                  style={{ background: "#5a9e62", color: "#fff" }}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = "#6aae72")}
+                  onMouseLeave={(e) => (e.currentTarget.style.background = "#5a9e62")}
+                >
+                  Use DeFi Saver ↗
+                </a>
+              </div>
+
+              {/* Liquity V2 — far right */}
+              <a
+                href="https://liquity.app/borrow"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs px-3 py-1.5 rounded-lg transition-all whitespace-nowrap active:scale-95"
+                style={{ background: "#c9901e", color: "#fff", fontWeight: 500 }}
+                onMouseEnter={(e) => (e.currentTarget.style.background = "#d4983a")}
+                onMouseLeave={(e) => (e.currentTarget.style.background = "#c9901e")}
+              >
+                Use Liquity V2 ↗
+              </a>
+            </div>
           )}
         </div>
       </nav>

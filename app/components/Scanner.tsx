@@ -17,7 +17,6 @@ type ScanResult = {
   totalAnnualCostSpot: number;
   totalAnnualCostLiquity: number;
   totalAnnualSavingsAvg: number;
-  totalAnnualSavingsCheap: number;
 };
 
 const ALL_PROTOCOLS: Protocol[] = [
@@ -106,82 +105,44 @@ export function Scanner({ address }: ScannerProps) {
                 totalDebtUsd={result.enrichedPositions.filter((p) => !p.isAlternativeCollateral).reduce((sum, p) => sum + p.debtUsd, 0)}
                 totalAnnualCostNow={result.totalAnnualCostNow}
                 totalAnnualCostSpot={result.totalAnnualCostSpot}
+                totalAnnualSavingsNow={result.enrichedPositions.filter((p) => !p.isAlternativeCollateral).reduce((sum, p) => sum + Math.max(0, p.liquityV2RateAvg !== undefined ? p.debtUsd * (p.currentRateApr - p.liquityV2RateAvg) : 0), 0)}
                 totalAnnualSavingsAvg={result.totalAnnualSavingsAvg}
-                totalAnnualSavingsCheap={result.totalAnnualSavingsCheap}
                 positionCount={result.enrichedPositions.length}
               />
               <PositionsTable positions={result.enrichedPositions} />
 
-              {/* Why + CTA */}
-              <div className="mt-8 pt-8 flex flex-col md:flex-row gap-8 items-start" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                {/* Left: Why */}
-                <div className="flex-1 min-w-0">
-                  <p className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: "#aaa9a4" }}>Why use Liquity V2 to borrow?</p>
-                  <ul className="space-y-1.5 text-sm" style={{ color: "#aaa9a4" }}>
-                    {[
-                      { text: "The lowest and most stable rates in DeFi" },
-                      { text: "Immutable contracts with no TradFi dependencies" },
-                      { text: "BOLD is a decentralized and highly secure stablecoin", links: [
-                        { label: "Bluechip ↗", href: "https://bluechip.org/en/coins/bold" },
-                        { label: "Pharos ↗", href: "https://pharos.watch/stablecoin/bold-liquity/" },
-                      ]},
-                      { text: "BOLD is redeemable 24/7, onchain and permissionless" },
-                      { text: "Competitive, sustainable, fully onchain yield", links: [
-                        { label: "Dune ↗", href: "https://dune.com/liquity/bold-yields" },
-                      ]},
-                    ].map((item, i) => (
-                      <li key={i} className="flex items-start gap-2 flex-wrap">
-                        <span className="mt-0.5 text-xs flex-shrink-0" style={{ color: "#d4883a" }}>→</span>
-                        <span>{item.text}</span>
-                        {item.links && item.links.map((link) => (
-                          <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer"
-                            className="text-xs px-1.5 py-0.5 rounded transition-colors whitespace-nowrap"
-                            style={{ background: "rgba(212,136,58,0.10)", color: "#d4883a", border: "1px solid rgba(212,136,58,0.25)" }}
-                            onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(212,136,58,0.5)")}
-                            onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(212,136,58,0.25)")}
-                          >
-                            {link.label}
-                          </a>
-                        ))}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Right: CTAs */}
-                <div className="flex flex-col gap-3 flex-shrink-0 w-full md:w-48">
-                  {(() => {
-                    const slugMap: Record<string, string> = { WETH: "eth", wstETH: "wsteth", rETH: "reth" };
-                    const cols = Array.from(new Set(result.enrichedPositions.map((p) => p.liquityV2Collateral).filter(Boolean)));
-                    const href = cols.length === 1
-                      ? `https://liquity.app/borrow/${slugMap[cols[0]!] ?? cols[0]!.toLowerCase()}`
-                      : "https://liquity.app/borrow";
-                    return (
-                      <a href={href} target="_blank" rel="noopener noreferrer"
-                        className="flex items-center justify-center gap-2 px-6 py-2.5 font-semibold rounded-lg active:scale-95 transition-all text-sm whitespace-nowrap"
-                        style={{ background: "#c9901e", color: "#111" }}
-                        onMouseEnter={(e) => (e.currentTarget.style.background = "#d4983a")}
-                        onMouseLeave={(e) => (e.currentTarget.style.background = "#c9901e")}
-                      >
-                        Use Liquity V2 ↗
-                      </a>
-                    );
-                  })()}
-                  <div className="pt-3 flex flex-col gap-1.5" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                    <p className="text-xs text-center leading-relaxed" style={{ color: "#aaa9a4" }}>DeFi Saver user?<br />Migrate with 1 click</p>
-                    <a
-                      href="https://app.defisaver.com/shifter"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 px-6 py-2.5 text-sm rounded-lg active:scale-95 transition-all whitespace-nowrap font-medium"
-                      style={{ background: "rgba(90,158,98,0.15)", color: "#5a9e62", border: "1px solid rgba(90,158,98,0.4)" }}
-                      onMouseEnter={(e) => { e.currentTarget.style.background = "rgba(90,158,98,0.22)"; e.currentTarget.style.borderColor = "rgba(90,158,98,0.6)"; }}
-                      onMouseLeave={(e) => { e.currentTarget.style.background = "rgba(90,158,98,0.15)"; e.currentTarget.style.borderColor = "rgba(90,158,98,0.4)"; }}
-                    >
-                      Use DeFi Saver ↗
-                    </a>
-                  </div>
-                </div>
+              {/* Why Liquity V2 */}
+              <div className="mt-8 pt-8" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
+                <p className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: "#aaa9a4" }}>Why use Liquity V2 to borrow?</p>
+                <ul className="space-y-1.5 text-sm" style={{ color: "#aaa9a4" }}>
+                  {[
+                    { text: "The lowest and most stable rates in DeFi" },
+                    { text: "Immutable contracts with no TradFi dependencies" },
+                    { text: "BOLD is a decentralized and highly secure stablecoin", links: [
+                      { label: "Bluechip ↗", href: "https://bluechip.org/en/coins/bold" },
+                      { label: "Pharos ↗", href: "https://pharos.watch/stablecoin/bold-liquity/" },
+                    ]},
+                    { text: "BOLD is redeemable 24/7, fully onchain and permissionless." },
+                    { text: "Competitive, sustainable, fully onchain yield", links: [
+                      { label: "Dune ↗", href: "https://dune.com/liquity/bold-yields" },
+                    ]},
+                  ].map((item, i) => (
+                    <li key={i} className="flex items-start gap-2 flex-wrap">
+                      <span className="mt-0.5 text-xs flex-shrink-0" style={{ color: "#d4883a" }}>→</span>
+                      <span>{item.text}</span>
+                      {item.links && item.links.map((link) => (
+                        <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer"
+                          className="text-xs px-1.5 py-0.5 rounded transition-colors whitespace-nowrap"
+                          style={{ background: "rgba(212,136,58,0.10)", color: "#d4883a", border: "1px solid rgba(212,136,58,0.25)" }}
+                          onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(212,136,58,0.5)")}
+                          onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(212,136,58,0.25)")}
+                        >
+                          {link.label}
+                        </a>
+                      ))}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </>
           ) : (
