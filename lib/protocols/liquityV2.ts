@@ -1,6 +1,7 @@
 import { createPublicClient, http, parseAbi } from "viem";
 import { mainnet } from "viem/chains";
 import type { LiquityV2Branch } from "../types";
+import { getLiquity90dAvgRate } from "../dune";
 
 // Source: https://docs.liquity.org/v2-documentation/technical-docs-and-audits#contract-addresses
 const COLLATERAL_REGISTRY  = "0xf949982b91c8c61e952b3ba942cbbfaef5386684" as const;
@@ -76,28 +77,6 @@ async function getClient() {
   });
 }
 
-async function fetch90dAvgRate(
-  collateral: string
-): Promise<number | undefined> {
-  const activePool = ACTIVE_POOLS[collateral];
-  if (!activePool) return undefined;
-  try {
-    const client = await getClient();
-    // ~7200 blocks/day × 90 days = 648000 blocks ago
-    const latestBlock = await client.getBlockNumber();
-    const historicalBlock = latestBlock - 648_000n;
-
-    const [aggWeighted, aggDebt] = await Promise.all([
-      client.readContract({ address: activePool, abi: ACTIVE_POOL_ABI, functionName: "aggWeightedDebtSum", blockNumber: historicalBlock }),
-      client.readContract({ address: activePool, abi: ACTIVE_POOL_ABI, functionName: "aggRecordedDebt", blockNumber: historicalBlock }),
-    ]) as unknown as [bigint, bigint];
-
-    if (aggDebt === 0n) return undefined;
-    return Number(aggWeighted / aggDebt) / 1e15 / 1000;
-  } catch {
-    return undefined;
-  }
-}
 
 async function fetchBranchRates(
   collateral: string,
@@ -202,7 +181,7 @@ export async function getLiquityV2Branches(): Promise<LiquityV2Branch[]> {
         const collateral = symbols[i];
         const [rates, avg90d] = await Promise.all([
           fetchBranchRates(collateral, i),
-          fetch90dAvgRate(collateral),
+          getLiquity90dAvgRate(collateral),
         ]);
         return {
           collateral,

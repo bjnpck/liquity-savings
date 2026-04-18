@@ -108,13 +108,14 @@ export function Scanner({ address }: ScannerProps) {
                 totalAnnualSavingsNow={result.enrichedPositions.filter((p) => !p.isAlternativeCollateral).reduce((sum, p) => sum + Math.max(0, p.liquityV2RateAvg !== undefined ? p.debtUsd * (p.currentRateApr - p.liquityV2RateAvg) : 0), 0)}
                 totalAnnualSavingsAvg={result.totalAnnualSavingsAvg}
                 positionCount={result.enrichedPositions.length}
+                protocolNames={[...new Set(result.enrichedPositions.filter((p) => !p.isAlternativeCollateral).map((p) => p.protocol))].join(", ")}
               />
               <PositionsTable positions={result.enrichedPositions} />
 
               {/* Why Liquity V2 */}
-              <div className="mt-8 pt-8" style={{ borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-                <p className="text-[11px] font-semibold uppercase tracking-widest mb-3" style={{ color: "#aaa9a4" }}>Why use Liquity V2 to borrow?</p>
-                <ul className="space-y-1.5 text-sm" style={{ color: "#aaa9a4" }}>
+              <div className="mt-8 pt-6 rounded-lg px-5 py-5" style={{ background: "#1c1c1c", border: "1px solid rgba(255,255,255,0.07)" }}>
+                <p className="text-sm font-semibold mb-4" style={{ color: "#d0d0ce" }}>Why use Liquity V2 to borrow?</p>
+                <ul className="space-y-2">
                   {[
                     { text: "The lowest and most stable rates in DeFi" },
                     { text: "Immutable contracts with no TradFi dependencies" },
@@ -129,10 +130,10 @@ export function Scanner({ address }: ScannerProps) {
                   ].map((item, i) => (
                     <li key={i} className="flex items-start gap-2 flex-wrap">
                       <span className="mt-0.5 text-xs flex-shrink-0" style={{ color: "#d4883a" }}>→</span>
-                      <span>{item.text}</span>
+                      <span className="text-sm" style={{ color: "#b0b0ae" }}>{item.text}</span>
                       {item.links && item.links.map((link) => (
                         <a key={link.href} href={link.href} target="_blank" rel="noopener noreferrer"
-                          className="text-xs px-1.5 py-0.5 rounded transition-colors whitespace-nowrap"
+                          className="text-xs px-2 py-0.5 rounded transition-colors whitespace-nowrap"
                           style={{ background: "rgba(212,136,58,0.10)", color: "#d4883a", border: "1px solid rgba(212,136,58,0.25)" }}
                           onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(212,136,58,0.5)")}
                           onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(212,136,58,0.25)")}

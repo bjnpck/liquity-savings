@@ -80,7 +80,7 @@ function buildHeaders(protocolNames: string): Header[] {
     { label: "Debt Token",  align: "left" },
     { label: "Debt (USD)",  align: "right" },
     { label: <><span>Your</span><br /><span>Current Rate</span></>,    align: "right", divider: true, tooltip: "The rate you are currently paying." },
-    { label: "Liquity Rate",                                            align: "right",                tooltip: "The current range of rates on Liquity V2. You set your own rate." },
+    { label: "Liquity Rate",                                            align: "right",                tooltip: "The current range of rates on Liquity V2." },
     { label: "Savings",                                                 align: "right" },
     { label: <><span>Your 90d</span><br /><span>Avg Rate</span></>,    align: "right", divider: true, tooltip: `The avg rate on ${protocolNames} over the last 90 days.` },
     { label: <><span>Liquity 90d</span><br /><span>Avg Rate</span></>, align: "right",                tooltip: "The avg rate on Liquity V2 over the last 90 days." },

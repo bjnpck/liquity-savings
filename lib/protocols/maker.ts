@@ -64,6 +64,9 @@ export async function fetchMakerPositions(address: string): Promise<BorrowPositi
     transport: http(process.env.NEXT_PUBLIC_RPC_URL),
   });
 
+  const latestBlock = await client.getBlockNumber();
+  const historicalBlock = latestBlock - 648_000n; // ~90 days
+
   // 1. Resolve DSProxy — CDPs are owned by the proxy, not the EOA directly
   const proxy = await client.readContract({
     address: PROXY_REGISTRY,
@@ -103,17 +106,24 @@ export async function fetchMakerPositions(address: string): Promise<BorrowPositi
   // 2. Batch: read urn balances (ink, art) and ilk rates from Vat
   const uniqueIlks = Array.from(new Set(ilkBytes.map((b) => b as `0x${string}`)));
 
-  const [vatIlkResults, jugResults, vatUrnResults] = await Promise.all([
+  const [vatIlkResults, jugResults, jugHistoricalResults, vatUrnResults] = await Promise.all([
     // ilk data: Art, rate, spot, line, dust
     Promise.all(
       uniqueIlks.map((ilk) =>
         client.readContract({ address: VAT_ADDRESS, abi: VAT_ABI, functionName: "ilks", args: [ilk] })
       )
     ),
-    // stability fee duty per ilk
+    // stability fee duty per ilk (current)
     Promise.all(
       uniqueIlks.map((ilk) =>
         client.readContract({ address: JUG_ADDRESS, abi: JUG_ABI, functionName: "ilks", args: [ilk] })
+      )
+    ),
+    // stability fee duty per ilk (~90 days ago) for 90d avg
+    Promise.all(
+      uniqueIlks.map((ilk) =>
+        client.readContract({ address: JUG_ADDRESS, abi: JUG_ABI, functionName: "ilks", args: [ilk], blockNumber: historicalBlock })
+          .catch(() => null)
       )
     ),
     // urn balances per CDP
@@ -127,11 +137,19 @@ export async function fetchMakerPositions(address: string): Promise<BorrowPositi
   // Build lookup maps
   const ilkRateMap = new Map<string, bigint>();
   const ilkDutyMap = new Map<string, number>();
+  const ilkDuty90dMap = new Map<string, number>();
   uniqueIlks.forEach((ilk, i) => {
     const [, rate] = vatIlkResults[i] as unknown as [bigint, bigint, bigint, bigint, bigint];
     const [duty] = jugResults[i] as unknown as [bigint, bigint];
     ilkRateMap.set(ilk, rate);
-    ilkDutyMap.set(ilk, dutyToApr(duty));
+    const currentApr = dutyToApr(duty);
+    ilkDutyMap.set(ilk, currentApr);
+
+    const historicalResult = jugHistoricalResults[i] as [bigint, bigint] | null;
+    if (historicalResult) {
+      const [historicalDuty] = historicalResult;
+      ilkDuty90dMap.set(ilk, (currentApr + dutyToApr(historicalDuty)) / 2);
+    }
   });
 
   // 3. Filter active CDPs (art > 0) and build positions
@@ -160,6 +178,8 @@ export async function fetchMakerPositions(address: string): Promise<BorrowPositi
     const collateralUsd = inkAmount * (prices[collateral] ?? 0);
     const currentRateApr = ilkDutyMap.get(p.ilkKey) ?? 0.05;
 
+    const rate90dAvg = ilkDuty90dMap.get(p.ilkKey);
+
     return {
       protocol: "Maker MCD",
       collateral,
@@ -169,6 +189,7 @@ export async function fetchMakerPositions(address: string): Promise<BorrowPositi
       debtAmount,
       debtUsd,
       currentRateApr,
+      ...(rate90dAvg !== undefined && { currentRate90dAvg: rate90dAvg }),
     };
   });
 }
