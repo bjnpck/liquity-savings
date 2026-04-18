@@ -138,7 +138,7 @@ async function fetchBranchRates(
 
 export async function getLiquityV2Branches(): Promise<LiquityV2Branch[]> {
   const now = Date.now();
-  if (_branchListCache && now - _branchListCache.ts < 5 * 60_000) {
+  if (_branchListCache && now - _branchListCache.ts < 2 * 60_000) {
     return _branchListCache.data;
   }
 
