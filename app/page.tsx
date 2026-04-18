@@ -34,19 +34,6 @@ export default function Home() {
 
           {address && (
             <div className="flex items-end" style={{ gap: "12px" }}>
-              {/* Liquity V2 */}
-              <a
-                href="https://liquity.app/borrow"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs px-3 py-1.5 rounded-lg transition-all whitespace-nowrap active:scale-95"
-                style={{ background: "#c9901e", color: "#fff", fontWeight: 500 }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = "#d4983a")}
-                onMouseLeave={(e) => (e.currentTarget.style.background = "#c9901e")}
-              >
-                Use Liquity V2 ↗
-              </a>
-
               {/* DeFi Saver — label above button, far right */}
               <div className="flex flex-col items-end" style={{ gap: "6px" }}>
                 <p className="text-[11px] leading-none whitespace-nowrap" style={{ color: "#aaa9a4" }}>
