@@ -103,7 +103,9 @@ export function SavingsSummary({
 
         {/* Liquity current cost + savings now */}
         <div className="px-4 py-3" style={{ borderRight: "1px solid rgba(255,255,255,0.06)" }}>
-          <p className="text-[11px] uppercase tracking-widest font-medium mb-1" style={{ color: "#777773" }}>Liquity Yearly Cost</p>
+          <p className="text-[11px] uppercase tracking-widest font-medium mb-1" style={{ color: "#777773" }}>
+            Liquity Yearly Cost<Tooltip text="Based on the current rate range" />
+          </p>
           {hasSavingsNow ? (
             <>
               <p className="font-mono text-lg font-semibold" style={{ color: "#5a9e62" }}>
@@ -130,7 +132,9 @@ export function SavingsSummary({
 
         {/* Liquity 90d avg cost + savings */}
         <div className="px-4 py-3">
-          <p className="text-[11px] uppercase tracking-widest font-medium mb-1" style={{ color: "#777773" }}>Liquity Yearly Cost (90d avg)</p>
+          <p className="text-[11px] uppercase tracking-widest font-medium mb-1" style={{ color: "#777773" }}>
+            Liquity Yearly Cost (90d avg)<Tooltip text="Based on Liquity's 90d avg rate." />
+          </p>
           {hasSavings ? (
             <>
               <p className="font-mono text-lg font-semibold" style={{ color: "#5a9e62" }}>
