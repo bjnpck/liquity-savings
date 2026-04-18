@@ -35,7 +35,7 @@ const SECONDS_PER_YEAR = 365 * 24 * 3600;
 
 function dutyToApr(duty: bigint): number {
   const ratePerSecond = Number(duty - RAY) / 1e27;
-  return ratePerSecond * SECONDS_PER_YEAR;
+  return Math.pow(1 + ratePerSecond, SECONDS_PER_YEAR) - 1;
 }
 
 function bytes32ToIlkName(b: `0x${string}`): string {
