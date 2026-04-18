@@ -75,7 +75,7 @@ export function Scanner({ address }: ScannerProps) {
       {/* Header */}
       <div className="flex items-center justify-between mb-5">
         <div>
-          <h2 className="text-sm font-semibold" style={{ color: "#f0f0ee" }}>Borrow Position Scanner</h2>
+          <h2 className="text-sm font-semibold" style={{ color: "#f0f0ee" }}>Position Scanner</h2>
           <p className="text-xs font-mono mt-0.5" style={{ color: "#777773" }}>
             {address.slice(0, 6)}…{address.slice(-4)}
           </p>

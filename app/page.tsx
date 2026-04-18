@@ -29,7 +29,7 @@ export default function Home() {
             onClick={() => setAddress(null)}
             className="flex items-center transition-opacity hover:opacity-70"
           >
-            <span className="text-sm font-medium" style={{ color: "#f0f0ee" }}>Liquity Savings</span>
+            <span className="text-sm font-medium" style={{ color: "#f0f0ee" }}>Borrow rate comparooor</span>
           </button>
 
           {address && (

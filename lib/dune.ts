@@ -27,7 +27,7 @@ async function fetchDuneRows(): Promise<DuneRow[]> {
   try {
     const res = await fetch(DUNE_QUERY_URL, {
       headers: { "X-DUNE-API-KEY": apiKey },
-      next: { revalidate: 600 },
+      cache: "no-store",
     });
     if (!res.ok) return [];
     const json = await res.json();
