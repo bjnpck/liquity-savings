@@ -110,6 +110,28 @@ export function Scanner({ address }: ScannerProps) {
                 positionCount={result.enrichedPositions.length}
                 protocolNames={[...new Set(result.enrichedPositions.filter((p) => !p.isAlternativeCollateral).map((p) => p.protocol))].join(", ")}
               />
+              {result.totalAnnualSavingsAvg > 0 && (
+                <div className="mb-4 flex items-center justify-between px-5 py-3.5" style={{ background: "rgba(90,158,98,0.08)", border: "0.5px solid rgba(90,158,98,0.25)", borderRadius: "8px" }}>
+                  <p style={{ fontSize: "15px", color: "#aaa9a4" }}>
+                    You can save{" "}
+                    <span style={{ fontWeight: 700, color: "#5a9e62" }}>
+                      ${Math.round(result.totalAnnualSavingsAvg).toLocaleString("en-US")}
+                    </span>
+                    /y by moving to Liquity.
+                  </p>
+                  <a
+                    href="https://liquity.app/borrow"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-xs px-3 py-1.5 rounded-lg transition-all whitespace-nowrap active:scale-95 ml-6"
+                    style={{ background: "#c9901e", color: "#fff", fontWeight: 500 }}
+                    onMouseEnter={(e) => (e.currentTarget.style.background = "#d4983a")}
+                    onMouseLeave={(e) => (e.currentTarget.style.background = "#c9901e")}
+                  >
+                    Use Liquity V2 ↗
+                  </a>
+                </div>
+              )}
               <PositionsTable positions={result.enrichedPositions} />
 
               {/* Why Liquity V2 */}
