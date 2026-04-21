@@ -4,7 +4,22 @@ export const runtime = "edge";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default function Image() {
+export default async function Image() {
+  // Fetch DM Sans Bold for headline weight — 3s timeout, fall back gracefully
+  let fontData: ArrayBuffer | null = null;
+  try {
+    const controller = new AbortController();
+    const t = setTimeout(() => controller.abort(), 3000);
+    const cssRes = await fetch(
+      "https://fonts.googleapis.com/css2?family=DM+Sans:wght@700&display=swap",
+      { headers: { "User-Agent": "Mozilla/5.0" }, signal: controller.signal }
+    );
+    clearTimeout(t);
+    const css = await cssRes.text();
+    const url = css.match(/src:\s*url\(([^)]+)\)/)?.[1];
+    if (url) fontData = await fetch(url).then((r) => r.arrayBuffer());
+  } catch { /* fall back to system font */ }
+
   return new ImageResponse(
     (
       <div
@@ -16,7 +31,7 @@ export default function Image() {
           flexDirection: "column",
           justifyContent: "space-between",
           padding: "52px 64px",
-          fontFamily: "sans-serif",
+          fontFamily: fontData ? "'DM Sans'" : "sans-serif",
           boxSizing: "border-box",
         }}
       >
@@ -53,10 +68,11 @@ export default function Image() {
             }}
           >
             <span>Stop overpaying</span>
-            <span>
-              for your{" "}
+            {/* Space must be inside a span — satori drops whitespace text nodes */}
+            <div style={{ display: "flex", flexDirection: "row" }}>
+              <span>for your&nbsp;</span>
               <span style={{ color: "#c9901e" }}>loan.</span>
-            </span>
+            </div>
           </div>
           <div style={{ fontSize: 22, color: "#aaa9a4", fontWeight: 400, lineHeight: 1.5, display: "flex" }}>
             Paste your wallet — check your savings.
@@ -101,6 +117,9 @@ export default function Image() {
         </div>
       </div>
     ),
-    size
+    {
+      ...size,
+      ...(fontData ? { fonts: [{ name: "DM Sans", data: fontData, weight: 700 }] } : {}),
+    }
   );
 }
