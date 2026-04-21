@@ -61,11 +61,12 @@ export function Scanner({ address }: ScannerProps) {
         if (data.enrichedPositions.length === 0) {
           posthog.capture("no_positions_found", { address });
         } else {
-          posthog.capture("scan_completed", {
+          posthog.capture("address_scanned", {
             address,
             position_count: data.enrichedPositions.length,
-            total_annual_savings_avg: data.totalAnnualSavingsAvg,
-            total_annual_cost_spot: data.totalAnnualCostSpot,
+            total_debt_usd: data.enrichedPositions.reduce((s, p) => s + p.debtUsd, 0),
+            annual_savings_usd: data.totalAnnualSavingsAvg,
+            annual_cost_spot: data.totalAnnualCostSpot,
             protocols: [...new Set(data.enrichedPositions.map((p) => p.protocol))],
           });
         }
@@ -177,6 +178,7 @@ export function Scanner({ address }: ScannerProps) {
                           style={{ background: "rgba(212,136,58,0.10)", color: "#d4883a", border: "1px solid rgba(212,136,58,0.25)" }}
                           onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(212,136,58,0.5)")}
                           onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(212,136,58,0.25)")}
+                          onClick={() => posthog.capture("link_clicked", { label: link.label, href: link.href, section: "why_liquity" })}
                         >
                           {link.label}
                         </a>
