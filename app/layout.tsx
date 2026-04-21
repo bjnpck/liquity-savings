@@ -13,7 +13,7 @@ export const metadata: Metadata = {
     type: "website",
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "Stop overpaying for your loan",
     description: "Paste your address and see how much you could save by migrating borrow positions to Liquity v2.",
   },
