@@ -4,18 +4,7 @@ export const runtime = "edge";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-export default async function Image() {
-  // Fetch DM Mono 500 from Google Fonts
-  const cssRes = await fetch(
-    "https://fonts.googleapis.com/css2?family=DM+Mono:wght@500&display=swap",
-    { headers: { "User-Agent": "Mozilla/5.0" } }
-  );
-  const css = await cssRes.text();
-  const fontUrl = css.match(/src: url\(([^)]+)\)/)?.[1];
-  const fontData = fontUrl
-    ? await fetch(fontUrl).then((r) => r.arrayBuffer())
-    : null;
-
+export default function Image() {
   return new ImageResponse(
     (
       <div
@@ -30,7 +19,7 @@ export default async function Image() {
       >
         <div
           style={{
-            fontFamily: "'DM Mono', monospace",
+            fontFamily: "monospace",
             fontWeight: 500,
             fontSize: 96,
             color: "#f0f0ee",
@@ -49,11 +38,6 @@ export default async function Image() {
         </div>
       </div>
     ),
-    {
-      ...size,
-      ...(fontData
-        ? { fonts: [{ name: "DM Mono", data: fontData, weight: 500 }] }
-        : {}),
-    }
+    size
   );
 }
