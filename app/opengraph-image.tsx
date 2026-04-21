@@ -70,7 +70,7 @@ export default async function Image() {
             <span>Stop overpaying</span>
             {/* Space must be inside a span — satori drops whitespace text nodes */}
             <div style={{ display: "flex", flexDirection: "row" }}>
-              <span>for your&nbsp;</span>
+              <span>{"for your "}</span>
               <span style={{ color: "#c9901e" }}>loan.</span>
             </div>
           </div>
