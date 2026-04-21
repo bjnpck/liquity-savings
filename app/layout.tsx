@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { PostHogProvider } from "./components/PostHogProvider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -8,8 +9,6 @@ export const metadata: Metadata = {
   title: "Stop overpaying for your loan",
   description: "Paste your address and see how much you could save by migrating borrow positions to Liquity v2.",
   openGraph: {
-    title: "Stop overpaying for your loan",
-    description: "Paste your address and see how much you could save by migrating borrow positions to Liquity v2.",
     type: "website",
     images: [{ url: "https://rate-comparooor.vercel.app/og-image.png", width: 1200, height: 630 }],
   },
@@ -23,7 +22,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en">
       <body className={`${inter.className} min-h-screen antialiased`} style={{ background: "#1a1a1a", color: "#e8e8e6" }}>
-        {children}
+        <PostHogProvider>{children}</PostHogProvider>
       </body>
     </html>
   );
