@@ -13,28 +13,91 @@ export default function Image() {
           height: "100%",
           background: "#141414",
           display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          flexDirection: "column",
+          justifyContent: "space-between",
+          padding: "52px 64px",
+          fontFamily: "sans-serif",
+          boxSizing: "border-box",
         }}
       >
-        <div
-          style={{
-            fontFamily: "monospace",
-            fontWeight: 500,
-            fontSize: 96,
-            color: "#f0f0ee",
-            letterSpacing: "-0.02em",
-            lineHeight: 1.15,
-            textAlign: "center",
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-          }}
-        >
-          <span>Rate</span>
-          <span>
-            Compar<span style={{ color: "#c9901e" }}>ooo</span>r
+        {/* Top row — badge */}
+        <div style={{ display: "flex", justifyContent: "flex-end" }}>
+          <span
+            style={{
+              fontSize: 13,
+              padding: "6px 16px",
+              borderRadius: 99,
+              border: "1px solid rgba(90,158,98,0.5)",
+              color: "#5a9e62",
+              background: "rgba(90,158,98,0.06)",
+              letterSpacing: "0.04em",
+              fontFamily: "monospace",
+            }}
+          >
+            DeFi borrow scanner
           </span>
+        </div>
+
+        {/* Middle — headline + sub */}
+        <div style={{ display: "flex", flexDirection: "column", justifyContent: "center", flex: 1, padding: "12px 0" }}>
+          <div
+            style={{
+              fontSize: 64,
+              fontWeight: 700,
+              color: "#f0f0ee",
+              lineHeight: 1.12,
+              letterSpacing: "-0.02em",
+              marginBottom: 22,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <span>Stop overpaying</span>
+            <span>
+              for your{" "}
+              <span style={{ color: "#c9901e" }}>loan.</span>
+            </span>
+          </div>
+          <div style={{ fontSize: 22, color: "#aaa9a4", fontWeight: 400, lineHeight: 1.5, display: "flex" }}>
+            Paste your wallet — check your savings.
+          </div>
+        </div>
+
+        {/* Bottom row — rate pills */}
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              padding: "8px 18px",
+              borderRadius: 6,
+              color: "#c0392b",
+              border: "1px solid rgba(192,57,43,0.35)",
+              background: "rgba(192,57,43,0.08)",
+              fontFamily: "monospace",
+            }}
+          >
+            <span style={{ fontSize: 17, fontWeight: 500 }}>4.28%</span>
+            <span style={{ fontSize: 11, opacity: 0.6, letterSpacing: "0.04em" }}>current rate</span>
+          </div>
+          <span style={{ color: "#444", fontSize: 22, display: "flex" }}>→</span>
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              padding: "8px 18px",
+              borderRadius: 6,
+              color: "#5a9e62",
+              border: "1px solid rgba(90,158,98,0.35)",
+              background: "rgba(90,158,98,0.08)",
+              fontFamily: "monospace",
+            }}
+          >
+            <span style={{ fontSize: 17, fontWeight: 500 }}>3.21%</span>
+            <span style={{ fontSize: 11, opacity: 0.6, letterSpacing: "0.04em" }}>new rate</span>
+          </div>
         </div>
       </div>
     ),

@@ -145,7 +145,7 @@ export function Scanner({ address }: ScannerProps) {
                       { label: "Bluechip ↗", href: "https://bluechip.org/en/coins/bold" },
                       { label: "Pharos ↗", href: "https://pharos.watch/stablecoin/bold-liquity/" },
                     ]},
-                    { text: "BOLD is redeemable 24/7, fully onchain and permissionless." },
+                    { text: "BOLD is redeemable 24/7 fully onchain and permissionless." },
                     { text: "Competitive, sustainable, fully onchain yield", links: [
                       { label: "Dune ↗", href: "https://dune.com/liquity/bold-yields" },
                     ]},
