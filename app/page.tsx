@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { isAddress } from "viem";
+import posthog from "posthog-js";
 import { Scanner } from "./components/Scanner";
 
 export default function Home() {
@@ -14,9 +15,12 @@ export default function Home() {
     const trimmed = input.trim();
     if (!isAddress(trimmed)) {
       setError("Enter a valid Ethereum address (0x…)");
+      posthog.capture("address_submit_invalid", { input: trimmed });
       return;
     }
     setError("");
+    posthog.identify(trimmed, { ethereum_address: trimmed });
+    posthog.capture("address_submitted", { address: trimmed });
     setAddress(trimmed);
   }
 
@@ -47,6 +51,7 @@ export default function Home() {
                   style={{ background: "#5a9e62", color: "#fff" }}
                   onMouseEnter={(e) => (e.currentTarget.style.background = "#6aae72")}
                   onMouseLeave={(e) => (e.currentTarget.style.background = "#5a9e62")}
+                  onClick={() => posthog.capture("defisaver_cta_clicked", { address })}
                 >
                   Use DeFi Saver ↗
                 </a>

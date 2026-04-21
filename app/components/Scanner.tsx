@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import posthog from "posthog-js";
 import type { BorrowPosition, ProtocolStatus as TProtocolStatus, Protocol } from "@/lib/types";
 import { ProtocolStatusList } from "./ProtocolStatus";
 import { SavingsSummary } from "./SavingsSummary";
@@ -57,9 +58,22 @@ export function Scanner({ address }: ScannerProps) {
       .then((data) => {
         setResult(data);
         setStatuses(data.statuses);
+        if (data.enrichedPositions.length === 0) {
+          posthog.capture("no_positions_found", { address });
+        } else {
+          posthog.capture("scan_completed", {
+            address,
+            position_count: data.enrichedPositions.length,
+            total_annual_savings_avg: data.totalAnnualSavingsAvg,
+            total_annual_cost_spot: data.totalAnnualCostSpot,
+            protocols: [...new Set(data.enrichedPositions.map((p) => p.protocol))],
+          });
+        }
       })
       .catch((e) => {
         if (e.name === "AbortError") return;
+        posthog.capture("scan_failed", { address, error: e.message ?? "Scan failed" });
+        posthog.captureException(e);
         setGlobalError(e.message ?? "Scan failed");
         setStatuses(
           ALL_PROTOCOLS.map((p) => ({ protocol: p, loading: false, error: null, positions: [] }))
@@ -127,6 +141,10 @@ export function Scanner({ address }: ScannerProps) {
                     style={{ background: "#c9901e", color: "#fff", fontWeight: 500 }}
                     onMouseEnter={(e) => (e.currentTarget.style.background = "#d4983a")}
                     onMouseLeave={(e) => (e.currentTarget.style.background = "#c9901e")}
+                    onClick={() => posthog.capture("liquity_cta_clicked", {
+                      address,
+                      annual_savings: result.totalAnnualSavingsAvg,
+                    })}
                   >
                     Use Liquity V2 ↗
                   </a>
