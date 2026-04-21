@@ -11,11 +11,13 @@ export const metadata: Metadata = {
     title: "Stop overpaying for your loan",
     description: "Paste your address and see how much you could save by migrating borrow positions to Liquity v2.",
     type: "website",
+    images: [{ url: "https://rate-comparooor.vercel.app/og-image.png", width: 1200, height: 630 }],
   },
   twitter: {
     card: "summary_large_image",
     title: "Stop overpaying for your loan",
     description: "Paste your address and see how much you could save by migrating borrow positions to Liquity v2.",
+    images: ["https://rate-comparooor.vercel.app/og-image.png"],
   },
 };
 
