@@ -5,8 +5,18 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "Liquity v2 Savings Calculator",
-  description: "See how much you could save by migrating your borrow positions to Liquity v2",
+  title: "Stop overpaying for your loan",
+  description: "Paste your address and see how much you could save by migrating borrow positions to Liquity v2.",
+  openGraph: {
+    title: "Stop overpaying for your loan",
+    description: "Paste your address and see how much you could save by migrating borrow positions to Liquity v2.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary",
+    title: "Stop overpaying for your loan",
+    description: "Paste your address and see how much you could save by migrating borrow positions to Liquity v2.",
+  },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
