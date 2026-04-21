@@ -15,8 +15,6 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Stop overpaying for your loan",
-    description: "Paste your address and see how much you could save by migrating borrow positions to Liquity v2.",
     images: ["https://rate-comparooor.vercel.app/og-image.png"],
   },
 };
