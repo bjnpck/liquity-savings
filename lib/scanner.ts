@@ -94,7 +94,22 @@ export async function scanAllProtocols(
         enriched.annualCostNow = pos.debtUsd * pos.currentRateApr;
         enriched.annualSavingsAvg = pos.debtUsd * (pos.currentRateApr - branch.avgRate);
       } else {
-        // No equivalent Liquity v2 branch — only show current cost
+        // No direct collateral match — suggest the best available Liquity V2 branch by 90d rate
+        const bestBranch = branches.length > 0
+          ? branches.reduce((best, b) => {
+              const rate = b.avg90dRate ?? b.avgRate;
+              const bestRate = best.avg90dRate ?? best.avgRate;
+              return rate < bestRate ? b : best;
+            })
+          : null;
+        if (bestBranch) {
+          enriched.liquityV2Collateral = bestBranch.collateral;
+          enriched.liquityV2RateAvg = bestBranch.avgRate;
+          enriched.liquityV2RateP25 = bestBranch.p25Rate;
+          enriched.liquityV2RateP10 = bestBranch.p10Rate;
+          enriched.liquityV2Rate90dAvg = bestBranch.avg90dRate;
+          enriched.noDirectCollateralMatch = true;
+        }
         enriched.annualCostNow = pos.debtUsd * pos.currentRateApr;
         enriched.annualSavingsAvg = 0;
       }

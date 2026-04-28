@@ -26,6 +26,7 @@ export interface BorrowPosition {
   annualSavingsAvg?: number;
   annualSavingsCheap?: number;  // vs p10
   isAlternativeCollateral?: boolean; // true for 2nd/3rd collateral rows — same debt, different branch option
+  noDirectCollateralMatch?: boolean; // true when collateral has no Liquity branch — best branch suggested
 }
 
 export interface ProtocolStatus {

@@ -162,6 +162,13 @@ export function PositionsTable({ positions }: { positions: BorrowPosition[] }) {
                   {pos.liquityV2RateP10 !== undefined && pos.liquityV2RateAvg !== undefined
                     ? <span className="font-mono font-medium" style={{ color: "#aaa9a4" }}>
                         {fmtPct(pos.liquityV2RateP10)}–{fmtPct(pos.liquityV2RateAvg)}
+                        {pos.noDirectCollateralMatch && (
+                          <span
+                            className="ml-1 text-[10px] cursor-help"
+                            style={{ color: "#666" }}
+                            title={`No direct Liquity branch for ${pos.collateral}. Showing best available branch (${pos.liquityV2Collateral}).`}
+                          >★</span>
+                        )}
                       </span>
                     : <span style={{ color: "#333" }}>—</span>
                   }
@@ -180,7 +187,16 @@ export function PositionsTable({ positions }: { positions: BorrowPosition[] }) {
                 {/* Liquity 90d avg rate */}
                 <td className="px-3 py-2.5 text-right">
                   {pos.liquityV2Rate90dAvg !== undefined
-                    ? <span className="font-mono" style={{ color: "#aaa9a4" }}>{fmtPct(pos.liquityV2Rate90dAvg)}</span>
+                    ? <span className="font-mono" style={{ color: "#aaa9a4" }}>
+                        {fmtPct(pos.liquityV2Rate90dAvg)}
+                        {pos.noDirectCollateralMatch && (
+                          <span
+                            className="ml-1 text-[10px] cursor-help"
+                            style={{ color: "#666" }}
+                            title={`Best available branch: ${pos.liquityV2Collateral}. Requires swapping collateral to use Liquity V2.`}
+                          >★</span>
+                        )}
+                      </span>
                     : <span style={{ color: "#333" }}>—</span>
                   }
                 </td>
