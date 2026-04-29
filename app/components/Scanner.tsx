@@ -129,20 +129,21 @@ export function Scanner({ address }: ScannerProps) {
                 <div className="mb-4 flex items-center justify-between px-5 py-3.5" style={{ background: "rgba(90,158,98,0.08)", border: "0.5px solid rgba(90,158,98,0.25)", borderRadius: "8px" }}>
                   <p style={{ fontSize: "15px", color: "#aaa9a4" }}>
                     {(() => {
-                      const liquityCollaterals = [...new Set(
+                      const mismatchedCollaterals = [...new Set(
                         result.enrichedPositions
-                          .filter((p) => !p.isAlternativeCollateral && p.liquityV2Collateral)
+                          .filter((p) => !p.isAlternativeCollateral && p.noDirectCollateralMatch && p.liquityV2Collateral)
                           .map((p) => p.liquityV2Collateral!)
                       )];
-                      const collateralLabel = liquityCollaterals.length > 0 ? liquityCollaterals.join("/") : null;
+                      const collateralLabel = mismatchedCollaterals.length > 0 ? mismatchedCollaterals.join("/") : null;
                       return <>
                         You can save{" "}
                         <span style={{ fontWeight: 700, color: "#5a9e62" }}>
                           ${Math.round(result.totalAnnualSavingsAvg).toLocaleString("en-US")}
                         </span>
-                        /y by using{" "}
-                        {collateralLabel && <span style={{ fontWeight: 600, color: "#f0f0ee" }}>{collateralLabel}</span>}
-                        {collateralLabel && " "}on Liquity.
+                        {collateralLabel
+                          ? <>/y by using <span style={{ fontWeight: 600, color: "#f0f0ee" }}>{collateralLabel}</span> on Liquity.</>
+                          : "/y by moving to Liquity."
+                        }
                       </>;
                     })()}
                   </p>
