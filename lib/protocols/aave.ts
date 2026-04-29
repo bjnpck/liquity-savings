@@ -91,19 +91,22 @@ export async function fetchAavePositions(address: string): Promise<BorrowPositio
   };
 
   const liquityCollaterals: string[] = [];
+  const actualCollaterals: string[] = [];
   for (let i = 0; i < allReserves.length; i++) {
     const ud = userDataResults[i];
     if (!ud) continue;
     const [aTokenBalance, , , , , , , , usageAsCollateral] = ud as unknown as [bigint, bigint, bigint, bigint, bigint, bigint, bigint, bigint, boolean];
     if (!usageAsCollateral || aTokenBalance === 0n) continue;
     const sym = allReserves[i].symbol;
+    if (!actualCollaterals.includes(sym)) actualCollaterals.push(sym);
     const mapped = COLLATERAL_MAP[sym] ?? COLLATERAL_MAP[sym.toUpperCase()];
     if (mapped && !liquityCollaterals.includes(mapped)) {
       liquityCollaterals.push(mapped);
     }
   }
-  // Fallback: if no recognized collateral found, default to WETH
-  if (liquityCollaterals.length === 0) liquityCollaterals.push("WETH");
+  const collateralsForRows = liquityCollaterals.length > 0
+    ? liquityCollaterals
+    : (actualCollaterals.length > 0 ? actualCollaterals : ["unknown"]);
 
   // 4. Fetch reserve data (for variable rate), oracle prices, and decimals — all parallel
   const [reserveDataArr, baseCurrencyUnit, decimalsArr, ...oraclePrices] =
@@ -174,10 +177,10 @@ export async function fetchAavePositions(address: string): Promise<BorrowPositio
 
     // Emit one row per Liquity v2 collateral branch the user has deposited.
     // 2nd+ rows are alternatives (same debt, different branch) — excluded from totals.
-    for (let ci = 0; ci < liquityCollaterals.length; ci++) {
+    for (let ci = 0; ci < collateralsForRows.length; ci++) {
       positions.push({
         protocol: "Aave v3",
-        collateral: liquityCollaterals[ci],
+        collateral: collateralsForRows[ci],
         collateralUsd: 0,
         debtToken: reserve.symbol,
         debtTokenAddress: reserve.tokenAddress,
