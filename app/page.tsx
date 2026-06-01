@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { isAddress } from "viem";
 import posthog from "posthog-js";
 import { Scanner } from "./components/Scanner";
@@ -29,12 +30,21 @@ export default function Home() {
       {/* Nav */}
       <nav className="px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
         <div className="max-w-6xl mx-auto flex items-center justify-between">
-          <button
-            onClick={() => setAddress(null)}
-            className="flex items-center transition-opacity hover:opacity-70"
-          >
-            <span className="text-sm font-medium" style={{ color: "#f0f0ee" }}>Borrow rate comparooor</span>
-          </button>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setAddress(null)}
+              className="flex items-center transition-opacity hover:opacity-70"
+            >
+              <span className="text-sm font-medium" style={{ color: "#f0f0ee" }}>Borrow rate comparooor</span>
+            </button>
+            <Link
+              href="/leaderboard"
+              className="text-sm transition-opacity hover:opacity-70"
+              style={{ color: "#aaa9a4" }}
+            >
+              Top borrowers
+            </Link>
+          </div>
 
           {address && (
             <div className="flex items-end" style={{ gap: "12px" }}>
