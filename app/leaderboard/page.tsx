@@ -8,17 +8,8 @@ export const metadata: Metadata = {
   description: "See how much the largest Spark and Maker borrowers could save by migrating to Liquity v2.",
 };
 
-function fmt(n: number): string {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(2)}M`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
-  return `$${n.toFixed(0)}`;
-}
-
 export default function LeaderboardPage() {
   const data = readLeaderboardData();
-
-  const totalSavings = data?.entries.reduce((s, e) => s + e.annualSavings, 0) ?? 0;
-  const totalDebt = data?.entries.reduce((s, e) => s + e.debtUsd, 0) ?? 0;
 
   const scrapedAt = data?.scrapedAt
     ? new Date(data.scrapedAt).toLocaleDateString("en-US", {
@@ -61,30 +52,6 @@ export default function LeaderboardPage() {
             How much the largest Spark and Maker positions could save by migrating to Liquity v2.
           </p>
         </div>
-
-        {/* Summary stats */}
-        {data && data.entries.length > 0 && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
-            {[
-              { label: "Positions tracked", value: data.entries.length.toString() },
-              { label: "Total debt", value: fmt(totalDebt) },
-              { label: "Total potential savings", value: `${fmt(totalSavings)}/y` },
-            ].map((stat) => (
-              <div
-                key={stat.label}
-                className="rounded-lg px-4 py-3"
-                style={{ background: "#222", border: "1px solid rgba(255,255,255,0.07)" }}
-              >
-                <p className="text-[11px] uppercase tracking-widest mb-1" style={{ color: "#777773" }}>
-                  {stat.label}
-                </p>
-                <p className="text-xl font-semibold font-mono" style={{ color: "#f0f0ee" }}>
-                  {stat.value}
-                </p>
-              </div>
-            ))}
-          </div>
-        )}
 
         {/* Table */}
         <LeaderboardTable entries={data?.entries ?? []} />

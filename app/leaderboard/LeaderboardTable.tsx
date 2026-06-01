@@ -58,6 +58,8 @@ export function LeaderboardTable({ entries }: { entries: LeaderboardEntry[] }) {
   const [active, setActive] = useState<Protocol>(protocols[0] ?? "Spark");
 
   const filtered = entries.filter((e) => e.protocol === active);
+  const totalDebt = filtered.reduce((sum, entry) => sum + entry.debtUsd, 0);
+  const totalSavings = filtered.reduce((sum, entry) => sum + entry.annualSavings, 0);
 
   if (entries.length === 0) {
     return (
@@ -69,6 +71,28 @@ export function LeaderboardTable({ entries }: { entries: LeaderboardEntry[] }) {
 
   return (
     <div>
+      {/* Summary stats */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
+        {[
+          { label: "Positions tracked", value: filtered.length.toString() },
+          { label: "Total debt", value: fmt(totalDebt) },
+          { label: "Total potential savings", value: `${fmt(totalSavings)}/y` },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="rounded-lg px-4 py-3"
+            style={{ background: "#222", border: "1px solid rgba(255,255,255,0.07)" }}
+          >
+            <p className="text-[11px] uppercase tracking-widest mb-1" style={{ color: "#777773" }}>
+              {stat.label}
+            </p>
+            <p className="text-xl font-semibold font-mono" style={{ color: "#f0f0ee" }}>
+              {stat.value}
+            </p>
+          </div>
+        ))}
+      </div>
+
       {/* Protocol tabs */}
       {protocols.length > 1 && (
         <div className="flex gap-1 mb-4">
