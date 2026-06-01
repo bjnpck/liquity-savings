@@ -114,7 +114,7 @@ export default function Home() {
           </form>
 
           <p className="mt-6 text-xs" style={{ color: "#777773" }}>
-            Scans Aave v3 · Spark · Maker MCD · Compound v3
+            Scans Aave v3 · Spark · Maker MCD · Curve crvUSD · Compound v3
           </p>
         </div>
       )}

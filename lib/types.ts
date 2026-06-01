@@ -2,6 +2,7 @@ export type Protocol =
   | "Aave v3"
   | "Spark"
   | "Maker MCD"
+  | "Curve crvUSD"
   | "Compound v3";
 
 export type CollateralToken = "ETH" | "WETH" | "wstETH" | "rETH" | "stETH" | "WBTC" | "cbETH" | "Other";

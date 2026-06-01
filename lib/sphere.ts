@@ -18,6 +18,7 @@ const PROTOCOL_MAP: Record<string, string[]> = {
   "Spark":       ["sparklend"],
   "Compound v3": ["compound_v3"],
   "Maker MCD":   [], // not in Sphere
+  "Curve crvUSD": [], // historical rate is fetched on-chain
 };
 
 let cache: { data: SphereMarket[]; ts: number } | null = null;

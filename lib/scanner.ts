@@ -13,6 +13,7 @@ import { fetchAavePositions } from "./protocols/aave";
 import { fetchMakerPositions } from "./protocols/maker";
 import { fetchCompoundPositions } from "./protocols/compound";
 import { fetchSparkPositions } from "./protocols/spark";
+import { fetchCurvePositions } from "./protocols/curve";
 
 export type ScanResult = {
   statuses: ProtocolStatus[];
@@ -29,6 +30,7 @@ const PROTOCOLS: {
 }[] = [
   { name: "Aave v3", fn: fetchAavePositions },
   { name: "Maker MCD", fn: fetchMakerPositions },
+  { name: "Curve crvUSD", fn: fetchCurvePositions },
   { name: "Compound v3", fn: fetchCompoundPositions },
   { name: "Spark", fn: fetchSparkPositions },
 ];

@@ -24,6 +24,7 @@ const ALL_PROTOCOLS: Protocol[] = [
   "Aave v3",
   "Spark",
   "Maker MCD",
+  "Curve crvUSD",
   "Compound v3",
 ];
 
@@ -204,7 +205,7 @@ export function Scanner({ address }: ScannerProps) {
           ) : (
             <div className="text-center py-16">
               <p className="text-sm font-medium mb-1" style={{ color: "#aaa9a4" }}>No borrow positions found</p>
-              <p className="text-xs" style={{ color: "#777773" }}>No open stablecoin borrows detected on Aave, Spark, Maker, or Compound for this address.</p>
+              <p className="text-xs" style={{ color: "#777773" }}>No open stablecoin borrows detected on Aave, Spark, Maker, Curve, or Compound for this address.</p>
             </div>
           )}
         </>
