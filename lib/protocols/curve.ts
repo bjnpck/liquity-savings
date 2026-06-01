@@ -33,6 +33,7 @@ const MONETARY_POLICY_ABI = parseAbi([
 
 const SECONDS_PER_YEAR = 365 * 24 * 60 * 60;
 const MIN_DEBT_USD = 0.01;
+let controllerCache: Promise<`0x${string}`[]> | null = null;
 
 function rateToApr(rate: bigint): number {
   return (Number(rate) / 1e18) * SECONDS_PER_YEAR;
@@ -66,24 +67,27 @@ export async function fetchCurvePositions(address: string): Promise<BorrowPositi
     transport: http(process.env.NEXT_PUBLIC_RPC_URL),
   });
 
-  const controllerCount = Number(
-    await client.readContract({
-      address: CONTROLLER_FACTORY,
-      abi: FACTORY_ABI,
-      functionName: "n_collaterals",
-    })
-  );
-
-  const controllers = await Promise.all(
-    Array.from({ length: controllerCount }, (_, i) =>
-      client.readContract({
+  controllerCache ??= (async () => {
+    const controllerCount = Number(
+      await client.readContract({
         address: CONTROLLER_FACTORY,
         abi: FACTORY_ABI,
-        functionName: "controllers",
-        args: [BigInt(i)],
+        functionName: "n_collaterals",
       })
-    )
-  ) as `0x${string}`[];
+    );
+    const discovered = await Promise.all(
+      Array.from({ length: controllerCount }, (_, i) =>
+        client.readContract({
+          address: CONTROLLER_FACTORY,
+          abi: FACTORY_ABI,
+          functionName: "controllers",
+          args: [BigInt(i)],
+        })
+      )
+    ) as `0x${string}`[];
+    return discovered;
+  })();
+  const controllers = await controllerCache;
 
   const activeControllers = (
     await Promise.all(

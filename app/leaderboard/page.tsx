@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "Top Borrowers — Liquity Savings",
-  description: "See how much the largest Spark and Maker borrowers could save by migrating to Liquity v2.",
+  description: "See how much top DeFi borrowers could save by migrating to Liquity v2.",
 };
 
 export default function LeaderboardPage() {
@@ -49,7 +49,7 @@ export default function LeaderboardPage() {
             Top borrowers
           </h1>
           <p className="text-sm" style={{ color: "#aaa9a4" }}>
-            How much the largest Spark and Maker positions could save by migrating to Liquity v2.
+            How much top DeFi borrowers could save by migrating to Liquity v2.
           </p>
         </div>
 
@@ -73,15 +73,16 @@ export default function LeaderboardPage() {
             </p>
           )}
           <p className="text-xs" style={{ color: "#555" }}>
-            Savings vs 90-day avg Liquity rate · Source:{" "}
+            Savings vs Liquity average rate · Sources:{" "}
             <a
               href="https://defiexplore.com/spark/positions/core"
               target="_blank"
               rel="noopener noreferrer"
               className="underline underline-offset-2"
             >
-              defiexplore.com
+              DeFi Explore
             </a>
+            {" "}· on-chain protocol data
           </p>
         </div>
       </div>

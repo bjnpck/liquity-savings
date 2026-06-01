@@ -82,7 +82,8 @@ export async function fetchCompoundPositions(address: string): Promise<BorrowPos
         const decimals = Math.log10(Number(baseScale as bigint));
         const debtAmount = Number(borrowBalance as bigint) / 10 ** decimals;
         const prices = await getTokenPrices([baseAsset]);
-        const debtUsd = debtAmount * (prices[baseAsset] ?? 0);
+        const stablecoinFallback = baseAsset === "USDC" || baseAsset === "USDT" ? 1 : 0;
+        const debtUsd = debtAmount * (prices[baseAsset] ?? stablecoinFallback);
 
         // borrowRate is per second in 1e18
         const currentRateApr = (Number(borrowRate) / 1e18) * SECONDS_PER_YEAR;

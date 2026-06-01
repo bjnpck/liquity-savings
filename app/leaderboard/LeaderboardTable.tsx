@@ -51,7 +51,7 @@ function AddressCell({ entry }: { entry: LeaderboardEntry }) {
 const borderRow = { borderBottom: "1px solid rgba(255,255,255,0.05)" };
 const dividerCell = { borderLeft: "1px solid rgba(255,255,255,0.08)" };
 
-type Protocol = "Spark" | "Maker MCD";
+type Protocol = LeaderboardEntry["protocol"];
 
 export function LeaderboardTable({ entries }: { entries: LeaderboardEntry[] }) {
   const protocols = Array.from(new Set(entries.map((e) => e.protocol))) as Protocol[];
@@ -95,7 +95,7 @@ export function LeaderboardTable({ entries }: { entries: LeaderboardEntry[] }) {
 
       {/* Protocol tabs */}
       {protocols.length > 1 && (
-        <div className="flex gap-1 mb-4">
+        <div className="flex flex-wrap gap-1 mb-4">
           {protocols.map((p) => (
             <button
               key={p}

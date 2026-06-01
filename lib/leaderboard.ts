@@ -2,9 +2,9 @@ import * as fs from "fs";
 import * as path from "path";
 
 export interface LeaderboardEntry {
-  address: string;       // EOA for Spark, "CDP #N" for Maker
+  address: string;       // EOA for wallet protocols, "CDP #N" for Maker
   cdpId?: number;        // Maker only
-  protocol: "Spark" | "Maker MCD";
+  protocol: "Aave v3" | "Spark" | "Maker MCD" | "Compound v3" | "Curve crvUSD";
   collateral: string;
   debtToken: string;
   debtUsd: number;

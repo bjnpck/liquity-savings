@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 /**
- * Scrapes top Spark + Maker borrowers from defiexplore.com, calculates Liquity v2
- * savings for each, and writes public/leaderboard-data.json.
+ * Fetches top DeFi borrowers, calculates Liquity v2 savings for each, and writes
+ * public/leaderboard-data.json.
  *
  * Usage:  npx tsx scripts/scrape-leaderboard.ts
  */
@@ -9,10 +9,14 @@
 import * as fs from "fs";
 import * as path from "path";
 import { chromium } from "playwright";
-import { createPublicClient, http, parseAbi } from "viem";
+import { createPublicClient, http, parseAbi, parseAbiItem } from "viem";
 import { mainnet } from "viem/chains";
+import { fetchAavePositions } from "../lib/protocols/aave";
+import { fetchCompoundPositions } from "../lib/protocols/compound";
+import { fetchCurvePositions } from "../lib/protocols/curve";
 import { fetchSparkPositions } from "../lib/protocols/spark";
 import { getLiquityV2Branches, mapToLiquityV2Branch } from "../lib/protocols/liquityV2";
+import type { BorrowPosition } from "../lib/types";
 import type { LeaderboardData, LeaderboardEntry } from "../lib/leaderboard";
 
 // Load .env.local for local dev
@@ -51,15 +55,45 @@ const JUG_ABI = parseAbi([
 
 const RAY = 10n ** 27n;
 const SECONDS_PER_YEAR = 365 * 24 * 3600;
+const COMPOUND_LOG_CHUNK = 50_000n;
+const COMPOUND_COMETS = [
+  { address: "0xc3d688B66703497DAA19211EEdff47f25384cdc3", startBlock: 15_331_586n },
+  { address: "0x3Afdc9BCA9213A35503b077a6072F3D0d5AB0840", startBlock: 20_101_800n },
+] as const;
+const COMET_ABI = parseAbi([
+  "function borrowBalanceOf(address account) external view returns (uint256)",
+]);
+const COMET_WITHDRAW_EVENT = parseAbiItem(
+  "event Withdraw(address indexed src, address indexed to, uint256 amount)"
+);
+const CURVE_CONTROLLER_FACTORY = "0xC9332fdCB1C491Dcc683bAe86Fe3cb70360738BC" as const;
+const CURVE_FACTORY_ABI = parseAbi([
+  "function n_collaterals() external view returns (uint256)",
+  "function controllers(uint256) external view returns (address)",
+]);
+const CURVE_CONTROLLER_ABI = parseAbi([
+  "function n_loans() external view returns (uint256)",
+  "function loans(uint256) external view returns (address)",
+  "function debt(address user) external view returns (uint256)",
+]);
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function parseMoney(s: string): number {
-  const clean = s.replace(/[$,\s]/g, "");
-  const m = clean.match(/^([0-9.]+)([KMBkmb]?)$/);
-  if (!m) return 0;
-  const mults: Record<string, number> = { k: 1e3, K: 1e3, m: 1e6, M: 1e6, b: 1e9, B: 1e9 };
-  return parseFloat(m[1]) * (mults[m[2]] ?? 1);
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+async function withRetry<T>(fn: () => Promise<T>, attempts = 4): Promise<T> {
+  let lastError: unknown;
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      return await fn();
+    } catch (error) {
+      lastError = error;
+      if (attempt < attempts - 1) await sleep(1000 * 2 ** attempt);
+    }
+  }
+  throw lastError;
 }
 
 function bytes32ToIlkName(b: `0x${string}`): string {
@@ -104,17 +138,64 @@ async function runWithConcurrency<T, R>(
   return results;
 }
 
-// ── Spark scraping ───────────────────────────────────────────────────────────
+function positionsToEntries(
+  address: string,
+  positions: BorrowPosition[],
+  branches: Awaited<ReturnType<typeof getLiquityV2Branches>>
+): LeaderboardEntry[] {
+  return positions.flatMap((pos) => {
+    if (!STABLECOINS.has(pos.debtToken.toUpperCase()) || pos.isAlternativeCollateral) return [];
+    const branch = mapToLiquityV2Branch(pos.collateral, branches);
+    if (!branch) return [];
+    return [{
+      address,
+      protocol: pos.protocol as LeaderboardEntry["protocol"],
+      collateral: pos.collateral,
+      debtToken: pos.debtToken,
+      debtUsd: pos.debtUsd,
+      currentRateApr: pos.currentRateApr,
+      liquityCollateral: branch.collateral,
+      liquityRateAvg: branch.avgRate,
+      liquityRateP10: branch.p10Rate,
+      liquityRate90dAvg: branch.avg90dRate,
+      annualSavings: Math.max(0, pos.debtUsd * (pos.currentRateApr - branch.avgRate)),
+    }];
+  });
+}
 
-async function scrapeSparkAddresses(limit = 50): Promise<{ address: string; debtUsd: number }[]> {
+async function scanWallets(
+  label: string,
+  addresses: string[],
+  fetchPositions: (address: string) => Promise<BorrowPosition[]>,
+  branches: Awaited<ReturnType<typeof getLiquityV2Branches>>
+): Promise<LeaderboardEntry[]> {
+  console.log(`  Scanning ${addresses.length} ${label} wallets (3 concurrent)...`);
+  const results = await runWithConcurrency(addresses, 3, async (address, i) => {
+    process.stdout.write(`  [${i + 1}/${addresses.length}] ${address.slice(0, 10)}...\r`);
+    return { address, positions: await withRetry(() => fetchPositions(address)) };
+  });
+  process.stdout.write("\n");
+
+  return results
+    .flatMap((result) => result ? positionsToEntries(result.address, result.positions, branches) : [])
+    .sort((a, b) => b.debtUsd - a.debtUsd);
+}
+
+// ── DeFi Explore scraping ────────────────────────────────────────────────────
+
+async function scrapeDefiExploreAddresses(
+  label: string,
+  baseUrl: string,
+  limit: number
+): Promise<string[]> {
   const browser = await chromium.launch({ headless: true });
-  const results: { address: string; debtUsd: number }[] = [];
+  const results: string[] = [];
   try {
     const page = await browser.newPage();
     let pageNum = 1;
     while (results.length < limit) {
-      const url = `https://defiexplore.com/spark/positions/core${pageNum > 1 ? `?page=${pageNum}` : ""}`;
-      console.log(`  Spark page ${pageNum}`);
+      const url = `${baseUrl}${pageNum > 1 ? `?page=${pageNum}` : ""}`;
+      console.log(`  ${label} page ${pageNum}`);
       await page.goto(url, { waitUntil: "networkidle", timeout: 60_000 });
       await page.waitForTimeout(3000);
 
@@ -123,10 +204,6 @@ async function scrapeSparkAddresses(limit = 50): Promise<{ address: string; debt
       if (rowCount === 0) break;
 
       for (let i = 0; i < rowCount && results.length < limit; i++) {
-        const borrowText = (await rows.nth(i).locator("td").nth(3).textContent()) ?? "";
-        const debtUsd = parseMoney(borrowText.trim());
-        if (debtUsd <= 0) continue;
-
         await rows.nth(i).locator("[data-tooltipped]").first().hover();
         await page.waitForTimeout(300);
         const fullAddress = await page.evaluate(() => {
@@ -134,7 +211,9 @@ async function scrapeSparkAddresses(limit = 50): Promise<{ address: string; debt
           const t = el?.textContent?.trim() ?? "";
           return /^0x[0-9a-fA-F]{40}$/.test(t) ? t : "";
         });
-        if (fullAddress) results.push({ address: fullAddress.toLowerCase(), debtUsd });
+        if (fullAddress && !results.includes(fullAddress.toLowerCase())) {
+          results.push(fullAddress.toLowerCase());
+        }
       }
 
       const hasNext = (await page.locator(`a[href*="page=${pageNum + 1}"]`).count()) > 0;
@@ -144,8 +223,144 @@ async function scrapeSparkAddresses(limit = 50): Promise<{ address: string; debt
   } finally {
     await browser.close();
   }
-  console.log(`  Found ${results.length} Spark addresses`);
+  console.log(`  Found ${results.length} ${label} addresses`);
   return results;
+}
+
+// ── Compound borrower enumeration ────────────────────────────────────────────
+
+async function getCompoundBorrowerAddresses(limit = 50): Promise<string[]> {
+  const client = createPublicClient({
+    chain: mainnet,
+    transport: http(process.env.NEXT_PUBLIC_RPC_URL),
+  });
+  const latestBlock = await client.getBlockNumber();
+  const debtByAddress = new Map<string, bigint>();
+
+  for (const comet of COMPOUND_COMETS) {
+    const candidates = new Set<`0x${string}`>();
+    console.log(`  Compound logs ${comet.address.slice(0, 10)}...`);
+    const chunks: { fromBlock: bigint; toBlock: bigint }[] = [];
+    for (let fromBlock = comet.startBlock; fromBlock <= latestBlock; fromBlock += COMPOUND_LOG_CHUNK) {
+      chunks.push({
+        fromBlock,
+        toBlock: fromBlock + COMPOUND_LOG_CHUNK - 1n < latestBlock
+          ? fromBlock + COMPOUND_LOG_CHUNK - 1n
+          : latestBlock,
+      });
+    }
+    const logChunks = await runWithConcurrency(chunks, 5, ({ fromBlock, toBlock }) =>
+      withRetry(() => client.getLogs({
+          address: comet.address,
+          event: COMET_WITHDRAW_EVENT,
+          fromBlock,
+          toBlock,
+        }))
+    );
+    for (const logs of logChunks) {
+      if (!logs) continue;
+      for (const log of logs) {
+        if (log.args.src) candidates.add(log.args.src);
+      }
+    }
+
+    const addresses = [...candidates];
+    for (let i = 0; i < addresses.length; i += 500) {
+      const batch = addresses.slice(i, i + 500);
+      const balances = await withRetry(() => client.multicall({
+        contracts: batch.map((address) => ({
+          address: comet.address,
+          abi: COMET_ABI,
+          functionName: "borrowBalanceOf",
+          args: [address],
+        })),
+        allowFailure: true,
+      }));
+      balances.forEach((result, j) => {
+        if (result.status === "success" && result.result > 0n) {
+          const address = batch[j].toLowerCase();
+          debtByAddress.set(address, (debtByAddress.get(address) ?? 0n) + result.result);
+        }
+      });
+    }
+  }
+
+  const addresses = [...debtByAddress.entries()]
+    .sort((a, b) => a[1] === b[1] ? 0 : a[1] > b[1] ? -1 : 1)
+    .slice(0, limit)
+    .map(([address]) => address);
+  console.log(`  Found ${addresses.length} Compound borrowers`);
+  return addresses;
+}
+
+// ── Curve borrower enumeration ───────────────────────────────────────────────
+
+async function getCurveBorrowerAddresses(limit = 50): Promise<string[]> {
+  const client = createPublicClient({
+    chain: mainnet,
+    transport: http(process.env.NEXT_PUBLIC_RPC_URL),
+  });
+  await sleep(3000);
+  const controllerCount = Number(await withRetry(() => client.readContract({
+    address: CURVE_CONTROLLER_FACTORY,
+    abi: CURVE_FACTORY_ABI,
+    functionName: "n_collaterals",
+  })));
+  const controllers = await withRetry(() => client.multicall({
+    contracts: Array.from({ length: controllerCount }, (_, i) => ({
+      address: CURVE_CONTROLLER_FACTORY,
+      abi: CURVE_FACTORY_ABI,
+      functionName: "controllers",
+      args: [BigInt(i)],
+    })),
+    allowFailure: false,
+  })) as unknown as `0x${string}`[];
+  const debtByAddress = new Map<string, bigint>();
+
+  for (const controller of controllers) {
+    const loanCount = Number(await withRetry(() => client.readContract({
+      address: controller,
+      abi: CURVE_CONTROLLER_ABI,
+      functionName: "n_loans",
+    })));
+    for (let offset = 0; offset < loanCount; offset += 100) {
+      const size = Math.min(100, loanCount - offset);
+      const addresses = await withRetry(() => client.multicall({
+        contracts: Array.from({ length: size }, (_, i) => ({
+          address: controller,
+          abi: CURVE_CONTROLLER_ABI,
+          functionName: "loans",
+          args: [BigInt(offset + i)],
+        })),
+        allowFailure: false,
+      })) as unknown as `0x${string}`[];
+      const debts = await withRetry(() => client.multicall({
+        contracts: addresses.map((address) => ({
+          address: controller,
+          abi: CURVE_CONTROLLER_ABI,
+          functionName: "debt",
+          args: [address],
+        })),
+        allowFailure: false,
+      })) as unknown as bigint[];
+      addresses.forEach((address, i) => {
+        if (debts[i] > 0n) {
+          const key = address.toLowerCase();
+          debtByAddress.set(key, (debtByAddress.get(key) ?? 0n) + debts[i]);
+        }
+      });
+      if (offset + size < loanCount) {
+        await sleep(250);
+      }
+    }
+  }
+
+  const addresses = [...debtByAddress.entries()]
+    .sort((a, b) => a[1] === b[1] ? 0 : a[1] > b[1] ? -1 : 1)
+    .slice(0, limit)
+    .map(([address]) => address);
+  console.log(`  Found ${addresses.length} Curve borrowers`);
+  return addresses;
 }
 
 // ── Maker scraping ───────────────────────────────────────────────────────────
@@ -238,51 +453,32 @@ async function main() {
     process.exit(1);
   }
 
-  console.log("1/5 Fetching Liquity v2 branch rates...");
+  console.log("1/9 Fetching Liquity v2 branch rates...");
   const branches = await getLiquityV2Branches();
   console.log(`     ${branches.map((b) => `${b.collateral} avg=${(b.avgRate * 100).toFixed(2)}%`).join("  ")}`);
 
   // ── Spark ──────────────────────────────────────────────────────────────────
-  console.log("2/5 Scraping Spark positions...");
-  const sparkScraped = await scrapeSparkAddresses(50);
+  console.log("2/9 Scraping Spark positions...");
+  const sparkAddresses = await scrapeDefiExploreAddresses("Spark", "https://defiexplore.com/spark/positions/core", 50);
+  const sparkEntries = await scanWallets("Spark", sparkAddresses, fetchSparkPositions, branches);
 
-  console.log(`3/5 Scanning ${sparkScraped.length} Spark addresses (10 concurrent)...`);
-  const sparkResults = await runWithConcurrency(sparkScraped, 10, async ({ address }, i) => {
-    process.stdout.write(`  [${i + 1}/${sparkScraped.length}] ${address.slice(0, 10)}...\r`);
-    const positions = await fetchSparkPositions(address);
-    return { address, positions };
-  });
-  process.stdout.write("\n");
+  console.log("3/9 Scraping Aave positions...");
+  const aaveAddresses = await scrapeDefiExploreAddresses("Aave", "https://aave.defiexplore.com/positions/core", 50);
+  const aaveEntries = await scanWallets("Aave", aaveAddresses, fetchAavePositions, branches);
 
-  const sparkEntries: LeaderboardEntry[] = [];
-  for (const result of sparkResults) {
-    if (!result) continue;
-    for (const pos of result.positions) {
-      if (!STABLECOINS.has(pos.debtToken) || pos.isAlternativeCollateral) continue;
-      const branch = mapToLiquityV2Branch(pos.collateral, branches);
-      if (!branch) continue;
-      sparkEntries.push({
-        address: result.address,
-        protocol: "Spark",
-        collateral: pos.collateral,
-        debtToken: pos.debtToken,
-        debtUsd: pos.debtUsd,
-        currentRateApr: pos.currentRateApr,
-        liquityCollateral: branch.collateral,
-        liquityRateAvg: branch.avgRate,
-        liquityRateP10: branch.p10Rate,
-        liquityRate90dAvg: branch.avg90dRate,
-        annualSavings: Math.max(0, pos.debtUsd * (pos.currentRateApr - branch.avgRate)),
-      });
-    }
-  }
-  sparkEntries.sort((a, b) => b.debtUsd - a.debtUsd);
+  console.log("4/9 Enumerating Compound borrowers...");
+  const compoundAddresses = await getCompoundBorrowerAddresses(50);
+  const compoundEntries = await scanWallets("Compound", compoundAddresses, fetchCompoundPositions, branches);
+
+  console.log("5/9 Enumerating Curve borrowers...");
+  const curveAddresses = await getCurveBorrowerAddresses(50);
+  const curveEntries = await scanWallets("Curve", curveAddresses, fetchCurvePositions, branches);
 
   // ── Maker ──────────────────────────────────────────────────────────────────
-  console.log("4/5 Scraping Maker CDPs...");
+  console.log("6/9 Scraping Maker CDPs...");
   const makerScraped = await scrapeMakerCdpIds(20);
 
-  console.log(`5/5 Fetching ${makerScraped.length} Maker positions on-chain (5 concurrent)...`);
+  console.log(`7/9 Fetching ${makerScraped.length} Maker positions on-chain (5 concurrent)...`);
   const makerResults = await runWithConcurrency(makerScraped, 5, async ({ cdpId }, i) => {
     process.stdout.write(`  [${i + 1}/${makerScraped.length}] CDP #${cdpId}\r`);
     return fetchMakerPositionByCdpId(cdpId, branches);
@@ -294,7 +490,7 @@ async function main() {
 
   // ── Write ──────────────────────────────────────────────────────────────────
   const data: LeaderboardData = {
-    entries: [...sparkEntries, ...makerEntries],
+    entries: [...sparkEntries, ...aaveEntries, ...compoundEntries, ...curveEntries, ...makerEntries],
     scrapedAt: new Date().toISOString(),
   };
 
@@ -302,8 +498,14 @@ async function main() {
   fs.writeFileSync(outPath, JSON.stringify(data, null, 2));
 
   const sparkSavings = sparkEntries.reduce((s, e) => s + e.annualSavings, 0);
+  const aaveSavings = aaveEntries.reduce((s, e) => s + e.annualSavings, 0);
+  const compoundSavings = compoundEntries.reduce((s, e) => s + e.annualSavings, 0);
+  const curveSavings = curveEntries.reduce((s, e) => s + e.annualSavings, 0);
   const makerSavings = makerEntries.reduce((s, e) => s + e.annualSavings, 0);
   console.log(`\nDone — Spark: ${sparkEntries.length} entries ($${(sparkSavings / 1e6).toFixed(2)}M savings)`);
+  console.log(`       Aave: ${aaveEntries.length} entries ($${(aaveSavings / 1e6).toFixed(2)}M savings)`);
+  console.log(`       Compound: ${compoundEntries.length} entries ($${(compoundSavings / 1e6).toFixed(2)}M savings)`);
+  console.log(`       Curve: ${curveEntries.length} entries ($${(curveSavings / 1e6).toFixed(2)}M savings)`);
   console.log(`       Maker: ${makerEntries.length} entries ($${(makerSavings / 1e6).toFixed(2)}M savings)`);
 }
 
