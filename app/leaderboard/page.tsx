@@ -23,22 +23,14 @@ export default function LeaderboardPage() {
       {/* Nav */}
       <nav className="px-4 py-3" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
         <div className="max-w-6xl mx-auto flex items-center justify-between">
+          <div />
           <Link
             href="/"
-            className="text-sm font-medium transition-opacity hover:opacity-70"
-            style={{ color: "#f0f0ee" }}
-          >
-            ← Borrow rate comparooor
-          </Link>
-          <a
-            href="https://app.defisaver.com/shifter"
-            target="_blank"
-            rel="noopener noreferrer"
             className="text-xs px-3 py-1.5 rounded-lg transition-all font-medium active:scale-95 hover:opacity-90"
             style={{ background: "#5a9e62", color: "#fff" }}
           >
-            Migrate with DeFi Saver ↗
-          </a>
+            Check your savings →
+          </Link>
         </div>
       </nav>
 
